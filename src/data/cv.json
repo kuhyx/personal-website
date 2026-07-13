@@ -1,0 +1,232 @@
+{
+  "header": {
+    "name": "Krzysztof Rudnicki",
+    "titlePl": "mgr inż.",
+    "titleEn": "MSc eng.",
+    "email": "krzysztofrudnicki0@protonmail.com",
+    "phone": "+48 516 501 330",
+    "linkedin": "https://www.linkedin.com/in/kuchy",
+    "github": "https://github.com/kuhyx",
+    "discord": "250721225586901002"
+  },
+  "summary": {
+    "pl": "Inżynier full-stack z ponad 4-letnim doświadczeniem komercyjnym w tworzeniu aplikacji webowych. Biegły w ekosystemach React, TypeScript, Angular oraz Python. Samodzielnie dostarcza kompletne produkty od projektu po wdrożenie.",
+    "en": "Full-stack engineer with over 4 years of commercial experience building web applications. Proficient in React, TypeScript, Angular, and Python ecosystems. Proven track record of independently delivering complete products from design through deployment."
+  },
+  "education": [
+    {
+      "institutionPl": "Politechnika Warszawska",
+      "institutionEn": "Warsaw University of Technology",
+      "entries": [
+        {
+          "degreePl": "Tytuł inżyniera",
+          "degreeEn": "Engineering Degree",
+          "detailPl": "Informatyka, 2019–2023",
+          "detailEn": "Computer Science, 2019–2023"
+        },
+        {
+          "degreePl": "Tytuł magistra",
+          "degreeEn": "Master's Degree",
+          "detailPl": "Informatyka, 2023–2026, ocena na dyplomie: 5.0/5.0",
+          "detailEn": "Computer Science, 2023–2026, diploma grade: 5.0/5.0"
+        }
+      ]
+    }
+  ],
+  "experience": [
+    {
+      "company": "AI Clearing",
+      "locationPl": "Warszawa",
+      "locationEn": "Warsaw",
+      "rolePl": "Full-Stack Engineer",
+      "roleEn": "Full-Stack Engineer",
+      "start": "2024-06",
+      "end": null,
+      "startLabelPl": "czerwiec 2024",
+      "startLabelEn": "June 2024",
+      "endLabelPl": "obecnie",
+      "endLabelEn": "present",
+      "items": [
+        {
+          "titlePl": "Platforma do przesyłania dużej liczby plików",
+          "titleEn": "Large-scale file upload platform",
+          "descPl": "Samodzielnie zaprojektowane i dostarczone rozwiązanie full-stack obsługujące 20,000–100,000 plików w jednej partii, używane codziennie przez klientów i podwykonawców, zastępujące ręczny proces i znacząco przyspieszające wewnętrzne obiegi pracy. **React, TypeScript, FastAPI, Python, SQL**",
+          "descEn": "Solely designed and delivered a full-stack file upload platform handling 20,000–100,000 files per batch, used daily by clients and contractors, replacing a manual process and significantly accelerating internal workflows. **React, TypeScript, FastAPI, Python, SQL**"
+        },
+        {
+          "titlePl": "Czat dla asystenta AI",
+          "titleEn": "AI assistant chat interface",
+          "descPl": "Interfejs czatu asystenta AI z wejściem głosowym, odpowiedziami audio w czasie rzeczywistym i interaktywnymi kontrolkami mapy, umożliwiający użytkownikom odpytywanie danych i manipulowanie obiektami geoprzestrzennymi bezpośrednio z konwersacji. **React, TypeScript, FastAPI, Python, SQL**",
+          "descEn": "Built an AI assistant chat with voice input, real-time audio responses, and interactive map controls, enabling users to query data and manipulate geospatial objects directly from conversations. **React, TypeScript, FastAPI, Python, SQL**"
+        },
+        {
+          "titlePl": "Rozwój i utrzymanie platformy",
+          "titleEn": "Platform development and maintenance",
+          "descPl": "Dostarczonych ponad 290 merge requestów w repozytoriach frontend i backend, obejmujących ponad 1,000 plików. Główne obszary: konfiguracja danych, narzędzia kontroli jakości, wizualizacje map i internacjonalizacja w 10 językach. **React, TypeScript, FastAPI, Python**",
+          "descEn": "Shipped 290+ merge requests across frontend and backend repositories, touching 1,000+ files. Key areas: data configuration tooling, quality-assurance workflows, map visualisations, and internationalisation across 10 locales. **React, TypeScript, FastAPI, Python**"
+        }
+      ]
+    },
+    {
+      "company": "Delta Electronics Sp. z o.o.",
+      "locationPl": "Warszawa",
+      "locationEn": "Warsaw",
+      "rolePl": "Frontend Developer",
+      "roleEn": "Frontend Developer",
+      "start": "2022-11",
+      "end": "2024-07",
+      "startLabelPl": "listopad 2022",
+      "startLabelEn": "November 2022",
+      "endLabelPl": "lipiec 2024",
+      "endLabelEn": "July 2024",
+      "durationPl": "1.5 roku",
+      "durationEn": "1.5 years",
+      "items": [
+        {
+          "titlePl": "Dashboard konfiguracji sieci ładowarek EV",
+          "titleEn": "EV charger grid configuration dashboard",
+          "descPl": "Samodzielnie zaprojektowany i dostarczony dashboard do zarządzania siecią ładowarek samochodów elektrycznych z monitorowaniem zużycia energii w czasie rzeczywistym przez WebSocket i wizualizacjami **ChartJS**. Udokumentowany przed implementacją i utrzymywany równolegle z kodem. **Angular, TypeScript, SCSS, Tailwind**",
+          "descEn": "Solely designed and delivered a real-time configuration dashboard for managing a grid of EV chargers, featuring live energy consumption monitoring via WebSocket and **ChartJS** visualisations. Documented before implementation and maintained alongside development. **Angular, TypeScript, SCSS, Tailwind**"
+        },
+        {
+          "titlePl": "Platforma automatyzacji testów oprogramowania ładowarek",
+          "titleEn": "Charger software test automation platform",
+          "descPl": "Samodzielnie zaprojektowana i dostarczona platforma do tworzenia, projektowania i uruchamiania automatycznych testów oprogramowania ładowarek EV, od interfejsu użytkownika przez API po bazę danych. **Angular, Nest, Postgres** (via **Prisma**)",
+          "descEn": "Solely designed and delivered an end-to-end test automation platform for EV charger software, covering UI, API, and database layers. **Angular, Nest, Postgres** (via **Prisma**)"
+        },
+        {
+          "titlePl": "Skrypt Bash do testów wytrzymałościowych kabli",
+          "titleEn": "Cable durability test script",
+          "descPl": "**Bash** skrypt sterujący routerem Teltonika RUT955 do włączania i wyłączania styczników, przesuwający kable ładowarki w celu testów wytrzymałościowych",
+          "descEn": "**Bash** script controlling a Teltonika RUT955 router to toggle contactors and move charger cables forward and backward for durability testing"
+        },
+        {
+          "titlePl": "Modernizacja oprogramowania konfiguracyjnego",
+          "titleEn": "Legacy software modernisation",
+          "descPl": "Strona w **Angular** zastępująca starszy serwis do składania zamówień na ładowarki EV",
+          "descEn": "**Angular** application replacing an older system used to place orders for EV chargers"
+        }
+      ]
+    },
+    {
+      "company": "Radioactive Rat Sp. z o.o.",
+      "locationPl": "Warszawa",
+      "locationEn": "Warsaw",
+      "rolePl": "Junior Full-Stack Developer",
+      "roleEn": "Junior Full-Stack Developer",
+      "start": "2021-12",
+      "end": "2022-11",
+      "startLabelPl": "grudzień 2021",
+      "startLabelEn": "December 2021",
+      "endLabelPl": "listopad 2022",
+      "endLabelEn": "November 2022",
+      "durationPl": "1 rok",
+      "durationEn": "1 year",
+      "items": [
+        {
+          "titlePl": "Serwis crowdfundingowy",
+          "titleEn": "Crowdfunding platform",
+          "descPl": "Rozwój i utrzymanie platformy crowdfundingowej — dostarczanie poprawek i funkcjonalności na podstawie zgłoszeń testerów i klientów. Głównie frontend (**Angular, TypeScript**); dodatkowo bot Twitch w **Node.js**",
+          "descEn": "Developed and maintained a crowdfunding platform, shipping bug fixes and features from tester and client feedback. Primarily frontend (**Angular, TypeScript**); also built a Twitch bot in **Node.js**"
+        },
+        {
+          "titlePl": "Kiosk telemedyczny",
+          "titleEn": "Telemedic kiosk deployment",
+          "descPl": "Wdrożenie zamkniętego kiosku Ubuntu dla aplikacji Electron — konfiguracja systemu, wyświetlacza, autostartu, blokady wyjścia i nasłuchiwania zdarzeń. Autorska dokumentacja wdrożeniowa. **Bash**, TypeScript",
+          "descEn": "Deployed a locked-down Ubuntu kiosk for a telemedic Electron app — configured OS, display, auto-start, exit prevention, and event listeners. Authored deployment documentation. **Bash**, TypeScript"
+        },
+        {
+          "titlePl": "System antycheatowy do gry mobilnej",
+          "titleEn": "Mobile game anti-cheat system",
+          "descPl": "Samodzielnie zaprojektowany i dostarczony system antycheatowy: przechwytywanie zdarzeń na froncie, weryfikacja po stronie serwera, integracja front-back, utrwalanie danych przez GraphQL. **Nest, TypeScript**",
+          "descEn": "Solely designed and delivered an anti-cheat system for a mobile game: frontend event capture, server-side verification, front-back integration, and data persistence via GraphQL. **Nest, TypeScript**"
+        }
+      ]
+    }
+  ],
+  "volunteer": [
+    {
+      "orgPl": "Studenckie stowarzyszenie twórców gier POLYGON",
+      "orgEn": "POLYGON Student Association for Game Developers",
+      "rolesPl": [
+        "Wiceprezes, styczeń 2022 – październik 2022",
+        "Prezes, październik 2022 – listopad 2024"
+      ],
+      "rolesEn": [
+        "Vice President, January 2022 – October 2022",
+        "President, October 2022 – November 2024"
+      ],
+      "descPl": "Zarządzanie największym w Polsce studenckim stowarzyszeniem twórców gier, podział zadań, organizacja wykładów, projektów semestralnych, wnioskowanie o dofinansowania z uczelni",
+      "descEn": "Managed the largest student game-development association in Poland, distributing tasks, organising lectures, semester projects, and applying for university funding"
+    },
+    {
+      "orgPl": "Grupa Teatralna Politechniki Warszawskiej",
+      "orgEn": "Warsaw University of Technology Theatre Group",
+      "rolesPl": ["Aktor, listopad 2024 – obecnie"],
+      "rolesEn": ["Actor, November 2024 – present"],
+      "descPl": "Doskonalenie umiejętności prezentacyjnych, praca zespołowa i występy pod presją publiczności",
+      "descEn": "Developing presentation skills, teamwork, and performing under audience pressure"
+    }
+  ],
+  "skills": [
+    {
+      "labelPl": "Języki programowania",
+      "labelEn": "Programming Languages",
+      "valuePl": "**TypeScript**, JavaScript, C++, C, C#",
+      "valueEn": "**TypeScript**, JavaScript, C++, C, C#"
+    },
+    {
+      "labelPl": "Języki skryptowe",
+      "labelEn": "Scripting Languages",
+      "valuePl": "Bash, Python, SQL",
+      "valueEn": "Bash, Python, SQL"
+    },
+    {
+      "labelPl": "Frameworki i biblioteki",
+      "labelEn": "Frameworks & Libraries",
+      "valuePl": "**React**, Angular, FastAPI, Nest, Tailwind, Electron, Ionic",
+      "valueEn": "**React**, Angular, FastAPI, Nest, Tailwind, Electron, Ionic"
+    },
+    {
+      "labelPl": "Narzędzia",
+      "labelEn": "Tools",
+      "valuePl": "**Git**, GitHub, GitLab, Docker, Linux, Node.js, ChartJS, LaTeX",
+      "valueEn": "**Git**, GitHub, GitLab, Docker, Linux, Node.js, ChartJS, LaTeX"
+    },
+    {
+      "labelPl": "Kompetencje miękkie",
+      "labelEn": "Soft Skills",
+      "valuePl": "Przywództwo, zarządzanie czasem, praca zespołowa, samodzielność, inicjatywa",
+      "valueEn": "Leadership, Time Management, Teamwork, Self-directed, Initiative"
+    },
+    {
+      "labelPl": "Języki",
+      "labelEn": "Languages",
+      "valuePl": "Polski — ojczysty, Angielski — C2",
+      "valueEn": "Polish — native, English — C2"
+    }
+  ],
+  "sideProjects": [
+    {
+      "titlePl": "Tryb skupienia telefonu",
+      "titleEn": "Phone Focus Mode",
+      "descPl": "Narzędzie ADB i Magisk oparte na lokalizacji GPS, które automatycznie blokuje niepotrzebne aplikacje w promieniu 500 m od domu — formuła Haversine, histereza, tryb awaryjny, trwałość stanu. **Bash**, Android ADB.",
+      "descEn": "GPS-based ADB & Magisk tool that automatically disables non-whitelisted apps within 500 m of home — Haversine formula, hysteresis, fail-safe, state persistence. **Bash**, Android ADB.",
+      "url": "https://github.com/kuhyx/testsAndMisc/tree/main/phone_focus_mode"
+    },
+    {
+      "titlePl": "Aplikacja łącząca ludzi z mediatorami",
+      "titleEn": "Legal hackathon mediator app",
+      "descPl": "Stworzona w 48 h podczas hackathonu prawniczego. Aplikacja mobilna pozwalająca opisać sprawę, wyliczyć koszty i czas oraz zaproponować mediatora. **Angular, Python, Flask**.",
+      "descEn": "Built in 48 hours at a legal hackathon. Mobile-friendly app to describe a lawsuit, estimate cost and duration, and propose a mediator. **Angular, Python, Flask**.",
+      "url": "https://github.com/kuhyx/ARAI"
+    },
+    {
+      "titlePl": "Skrypty automatyzujące Linux",
+      "titleEn": "Linux automation scripts",
+      "descPl": "Repozytorium skryptów do automatyzacji pracy w Linuksie i zwiększania produktywności — CI, linting, pre-commit hooks. **Bash, Python**.",
+      "descEn": "Repository of productivity and system-administration scripts with CI, linting, and pre-commit hooks. **Bash, Python**.",
+      "url": "https://github.com/kuhyx/testsAndMisc"
+    }
+  ]
+}
