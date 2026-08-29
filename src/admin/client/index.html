@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Write — kuhy.duckdns.org</title>
+    <!--
+      The editor page. Built by `pnpm build:admin` into dist-admin/client/
+      and served from there by the admin service -- it is deliberately not part
+      of the site's own bundle, which must not grow a private route.
+
+      Tokens are copied from src/styles/index.css rather than imported: the two
+      builds share no config, and the page is plain enough that drift is
+      cosmetic.
+    -->
+    <style>
+      :root {
+        --bg: #f6f4f3;
+        --fg: #211d1b;
+        --muted: #70625b;
+        --accent: #b8862e;
+        --border: #e0dad7;
+        --card: #fcfbfb;
+        --on-fill: #211d1b;
+        --danger: #a4321f;
+        --space-1: 0.25rem;
+        --space-2: 0.5rem;
+        --space-3: 1rem;
+        --space-4: 1.5rem;
+        --space-5: 2rem;
+        --radius-sm: 0.5rem;
+        --radius-md: 0.75rem;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #211d1b;
+          --fg: #eceae9;
+          --muted: #aaa09a;
+          --border: #463e3a;
+          --card: #2b2624;
+          --danger: #e08b7c;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        line-height: 1.55;
+      }
+      .page {
+        max-width: 60rem;
+        margin: 0 auto;
+        padding: var(--space-5) var(--space-3);
+      }
+      h1 {
+        font-size: 1.5rem;
+        margin: 0 0 var(--space-4);
+      }
+      label {
+        display: block;
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-bottom: var(--space-1);
+      }
+      input,
+      textarea,
+      select,
+      button {
+        font: inherit;
+        color: inherit;
+      }
+      input,
+      textarea {
+        width: 100%;
+        padding: var(--space-2);
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+      }
+      textarea {
+        min-height: 24rem;
+        resize: vertical;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+      .field {
+        margin-bottom: var(--space-3);
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-3);
+        align-items: flex-end;
+      }
+      .row > .field {
+        flex: 1 1 12rem;
+        margin-bottom: 0;
+      }
+      button {
+        padding: var(--space-2) var(--space-3);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        background: var(--card);
+        cursor: pointer;
+      }
+      button:hover:enabled {
+        border-color: var(--accent);
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      button.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--on-fill);
+      }
+      button.danger {
+        color: var(--danger);
+      }
+      .checkbox {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+      }
+      .checkbox input {
+        width: auto;
+      }
+      .layout {
+        display: flex;
+        gap: var(--space-4);
+        align-items: flex-start;
+      }
+      .sidebar {
+        flex: 0 0 15rem;
+      }
+      .editor {
+        flex: 1 1 0;
+        min-width: 0;
+      }
+      .posts {
+        list-style: none;
+        margin: 0 0 var(--space-3);
+        padding: 0;
+      }
+      .posts button {
+        width: 100%;
+        text-align: left;
+        margin-bottom: var(--space-1);
+        border-color: transparent;
+      }
+      .posts button[aria-current="true"] {
+        border-color: var(--accent);
+      }
+      .posts small {
+        display: block;
+        color: var(--muted);
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+        align-items: center;
+        margin-top: var(--space-3);
+      }
+      .images {
+        margin-top: var(--space-3);
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+      .images code {
+        cursor: pointer;
+      }
+      #status {
+        margin-top: var(--space-3);
+        padding: var(--space-2) var(--space-3);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        background: var(--card);
+        white-space: pre-wrap;
+        font-size: 0.9rem;
+      }
+      #status:empty {
+        display: none;
+      }
+      #status[data-tone="bad"] {
+        border-color: var(--danger);
+        color: var(--danger);
+      }
+      .login {
+        max-width: 22rem;
+      }
+      [hidden] {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section id="login-view" class="login" hidden>
+        <h1>Write</h1>
+        <form id="login-form">
+          <div class="field">
+            <label for="password">Password</label>
+            <input id="password" type="password" autocomplete="current-password" required />
+          </div>
+          <button class="primary" type="submit">Sign in</button>
+        </form>
+      </section>
+
+      <section id="editor-view" hidden>
+        <div class="layout">
+          <aside class="sidebar">
+            <h1>Posts</h1>
+            <ul class="posts" id="post-list"></ul>
+            <button id="new-post" type="button">New post</button>
+            <button id="logout" type="button">Sign out</button>
+          </aside>
+
+          <form class="editor" id="post-form">
+            <div class="row field">
+              <div class="field">
+                <label for="slug">Slug (URL)</label>
+                <input id="slug" required pattern="[a-z0-9]([a-z0-9-]*[a-z0-9])?" />
+              </div>
+              <div class="field">
+                <label for="date">Date</label>
+                <input id="date" type="date" required />
+              </div>
+            </div>
+            <div class="field">
+              <label for="title">Title</label>
+              <input id="title" required />
+            </div>
+            <div class="field">
+              <label for="summary">Summary</label>
+              <input id="summary" required />
+            </div>
+            <div class="row field">
+              <div class="field">
+                <label for="tags">Tags (comma separated)</label>
+                <input id="tags" />
+              </div>
+              <div class="field">
+                <label for="cover">Cover image (./name.png)</label>
+                <input id="cover" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="body">Markdown</label>
+              <textarea id="body" required></textarea>
+            </div>
+            <div class="actions">
+              <button class="primary" type="submit" id="save">Save &amp; publish</button>
+              <label class="checkbox" for="draft">
+                <input id="draft" type="checkbox" />
+                Draft
+              </label>
+              <input id="image-input" type="file" accept="image/*" hidden />
+              <button type="button" id="upload">Add image</button>
+              <button type="button" id="delete" class="danger">Delete post</button>
+            </div>
+            <div class="images" id="images"></div>
+          </form>
+        </div>
+      </section>
+
+      <p id="status" role="status" aria-live="polite"></p>
+    </main>
+
+    <script type="module">
+      // Markup and styles here, behaviour in editor.ts -- so the behaviour is
+      // type-checked, linted and tested rather than living as script text.
+      import { mountEditor } from "./editor.ts";
+
+      await mountEditor({
+        doc: document,
+        fetch: window.fetch.bind(window),
+        today: () => new Date().toISOString().slice(0, 10),
+      });
+    </script>
+  </body>
+</html>
