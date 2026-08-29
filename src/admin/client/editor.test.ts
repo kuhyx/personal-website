@@ -240,7 +240,47 @@ describe("editing", () => {
     body.value = "before after";
     body.selectionStart = body.selectionEnd = 7;
     firstImageChip().click();
-    expect(body.value).toBe("before ![](./cover.png)after");
+    expect(body.value).toBe("before \n\n![](./cover.png)\n\nafter");
+    expect(body.selectionStart).toBe("before \n\n![](./cover.png)\n\n".length);
+  });
+
+  it("separates an inserted image from a body that does not end in a newline", async () => {
+    const { fetch } = withPost();
+    await mountEditor({ doc: document, fetch, today });
+    postButton().click();
+    await settle();
+    const body = el("body") as HTMLTextAreaElement;
+    // Assigning `value` is what loading a post does, and it leaves the caret at
+    // the end -- the state a writer is in after picking a post from the list.
+    // Glued to a closing fence, the image would be inside code that never ends.
+    body.value = "```ts\nconst ok = true;\n```";
+    body.selectionStart = body.selectionEnd = body.value.length;
+    firstImageChip().click();
+    expect(body.value).toBe("```ts\nconst ok = true;\n```\n\n![](./cover.png)");
+  });
+
+  it("adds only the newlines the boundary is missing", async () => {
+    const { fetch } = withPost();
+    await mountEditor({ doc: document, fetch, today });
+    postButton().click();
+    await settle();
+    const body = el("body") as HTMLTextAreaElement;
+    body.value = "one\n\ntwo";
+    body.selectionStart = body.selectionEnd = 4;
+    firstImageChip().click();
+    expect(body.value).toBe("one\n\n![](./cover.png)\n\ntwo");
+  });
+
+  it("adds nothing where the boundary is already a blank line", async () => {
+    const { fetch } = withPost();
+    await mountEditor({ doc: document, fetch, today });
+    postButton().click();
+    await settle();
+    const body = el("body") as HTMLTextAreaElement;
+    body.value = "one\n\n\n\ntwo";
+    body.selectionStart = body.selectionEnd = 5;
+    firstImageChip().click();
+    expect(body.value).toBe("one\n\n![](./cover.png)\n\ntwo");
   });
 });
 

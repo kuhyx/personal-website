@@ -78,6 +78,18 @@ export function parseTags(raw: string): string[] {
 }
 
 /**
+ * The newlines to put between an inserted block and the text beside it.
+ *
+ * Markdown starts a new block on a blank line, so two newlines is the target
+ * and whatever is already at that boundary counts towards it. Nothing beside
+ * it needs nothing: padding the ends of the body would only be trimmed away
+ * when the post is written out.
+ */
+function separator(neighbour: string, existing: number): string {
+  return neighbour === "" ? "" : "\n".repeat(2 - existing);
+}
+
+/**
  * Wire up the editor and decide which view to show.
  *
  * The document is served without a session, so the first request is what
@@ -143,10 +155,26 @@ export async function mountEditor(ports: EditorPorts): Promise<void> {
     };
   }
 
+  /**
+   * Insert `text` at the caret, as a block of its own.
+   *
+   * Everything inserted here is an image, and an image glued to the end of the
+   * line before it is at best inline in someone else's paragraph and at worst
+   * -- when that line is a closing code fence -- a fence that never closes.
+   * That is not a corner case: loading a post assigns `body.value`, which
+   * leaves the caret at the end of it, so "pick a post, add an image" lands
+   * there every time unless the writer clicks into the textarea first.
+   */
   function insert(text: string): void {
     const at = body.selectionStart;
-    body.value = `${body.value.slice(0, at)}${text}${body.value.slice(body.selectionEnd)}`;
-    body.selectionStart = body.selectionEnd = at + text.length;
+    const before = body.value.slice(0, at);
+    const after = body.value.slice(body.selectionEnd);
+    const lead = separator(before, before.endsWith("\n\n") ? 2 : before.endsWith("\n") ? 1 : 0);
+    const trail = separator(after, after.startsWith("\n\n") ? 2 : after.startsWith("\n") ? 1 : 0);
+    body.value = `${before}${lead}${text}${trail}${after}`;
+    // After the whole block, so the next thing typed starts a new paragraph
+    // rather than running on from the image.
+    body.selectionStart = body.selectionEnd = at + lead.length + text.length + trail.length;
   }
 
   function renderImages(images: readonly string[]): void {
