@@ -10,8 +10,12 @@
  * neither is written down twice.
  */
 
-import { captured } from "./captured";
 import { parsePost, type PostMeta } from "./frontmatter";
+import { imageKey, isRemoteImage, markdownImageSources } from "./markdown-images";
+
+// Re-exported so callers keep one import site for "everything about posts",
+// while the pure half stays importable without the globs below.
+export { imageKey, isRemoteImage, markdownImageSources };
 
 /** A post ready to render. */
 export interface Post {
@@ -24,9 +28,6 @@ export interface Post {
   readonly images: ReadonlyMap<string, string>;
 }
 
-/** Matches `![alt](path)`, capturing the path. */
-const IMAGE_PATTERN = /!\[[^\]]*\]\(\s*([^)\s]+)/g;
-
 /** Everything before the final `/`, i.e. the post's directory. */
 function directoryOf(path: string): string {
   return path.slice(0, path.lastIndexOf("/"));
@@ -38,25 +39,9 @@ function slugOf(path: string): string {
   return directory.slice(directory.lastIndexOf("/") + 1);
 }
 
-/** Normalise a markdown image reference to its key in {@link Post.images}. */
-export function imageKey(source: string): string {
-  return source.startsWith("./") ? source.slice(2) : source;
-}
-
-/** True for images the bundler never sees, which are the author's problem. */
-export function isRemoteImage(source: string): boolean {
-  return /^(https?:)?\/\//.test(source) || source.startsWith("data:");
-}
-
 /** Every image path referenced by a post: its body images plus its cover. */
 export function imageReferences(post: Post): string[] {
-  const referenced = [...post.body.matchAll(IMAGE_PATTERN)].map((match) =>
-    captured(match, 1),
-  );
-  if (post.meta.cover !== null) {
-    referenced.push(post.meta.cover);
-  }
-  return referenced.filter((source) => !isRemoteImage(source));
+  return markdownImageSources(post.body, post.meta.cover);
 }
 
 /**

@@ -68,16 +68,78 @@ mistyped path **fails `pnpm test`** rather than shipping as a 404. Assets under
 `src/content/blog/` are never inlined as data URIs, because a `cover:` has to
 be a real fetchable URL for `og:image`.
 
+## Writing a post in the browser
+
+`src/admin/` is a small service that edits the same directories you would edit
+by hand: it writes `DOCS-index.md`, drops uploads beside it, and then runs the
+build so the change is live. It is a separate process from the site — the site
+itself stays a static `dist/`, with no server behind it.
+
+```bash
+pnpm build:admin                                    # service + editor page
+node dist-admin/admin.js session-secret             # a 32-byte hex secret
+printf 'your password' | node dist-admin/admin.js hash-password
+
+PW_ADMIN_SESSION_SECRET=... PW_ADMIN_PASSWORD_HASH=... pnpm admin
+```
+
+`build:admin` produces two things under `dist-admin/`: `admin.js`, the service,
+and `client/`, the editor page. The service serves the page and its bundle
+itself, so both have to be built before it will show you anything.
+
+Then open `/admin`. Environment:
+
+| Variable | Default | |
+| --- | --- | --- |
+| `PW_ADMIN_PASSWORD_HASH` | — | required; scrypt hash, never the password |
+| `PW_ADMIN_SESSION_SECRET` | — | required; >= 32 chars, signs the session cookie |
+| `PW_ADMIN_HOST` | `127.0.0.1` | loopback on purpose |
+| `PW_ADMIN_PORT` | `4321` | |
+| `PW_ADMIN_ROOT` | `process.cwd()` | repo root; also the build's working directory |
+
+**Reach it over `localhost`, never over a plain-http LAN address.** The session
+cookie is `Secure`, so a browser served the editor from `http://192.168.x.x`
+accepts the login and then silently drops the cookie: every request after it
+comes back 401. Browsers exempt `localhost`, which is why the deployed service
+binds to loopback and is reached through an SSH tunnel:
+
+```bash
+ssh -N -L 4321:127.0.0.1:4321 <server>   # then open http://localhost:4321/admin
+```
+
+There is deliberately no Caddy route for it. The site is public; its editor is
+not on the internet at all.
+
+What the service guarantees, and why each one is a test rather than a habit:
+
+- A save is refused if the body or `cover:` names an image that is not on
+  disk, **before** anything is written — the same check `posts.test.ts` runs
+  over the committed corpus, so the editor cannot produce a post the repo
+  would reject.
+- Slugs and image filenames are allowlists (`guards.ts`), so `..` and `/`
+  never need to be blocked individually.
+- Builds are serialised: two saves in a row queue rather than sharing `dist/`.
+- Login is throttled globally — five failures buys a 15-minute lockout.
+- A save skips `tsc`, which is what makes it ~0.6 s rather than ~2.4 s. Prose
+  changes no types; anything that does still goes through `pnpm build` and CI.
+
+Posts written here are ordinary files: commit them like any other change.
+
 ## Layout
 
 - `src/lib/` — `github.ts` (projects feed + language breakdown), `duration.ts`
   (live job durations), `markup.tsx` (`**bold**` rendering), `frontmatter.ts`
-  + `posts.ts` (the blog corpus), `head.ts` (per-page meta tags), `site.ts`
+  + `posts.ts` + `markdown-images.ts` (the blog corpus), `head.ts` (per-page meta tags), `site.ts`
   (the public origin), `rehype-highlight-lite.ts` (code fences)
 - `src/components/` — `hero`, `projects`, `project-card`, `cv-section`,
   `experience-item`, `site-nav`, `home`, `blog-index`, `post-page`,
   `post-body`, `post-meta`, `not-found`
 - `src/content/blog/` — the posts
+- `src/admin/server/` — the editor service: `handler.ts` (every route, as
+  one pure function), `store.ts`, `guards.ts`, `auth.ts`, `rate-limit.ts`,
+  `builder.ts`, and the runtime edges `index.ts` / `node-fs.ts` /
+  `process.ts` / `config.ts`
+- `src/admin/client/index.html` — the editor page, one dependency-free file
 - `src/data/` — `cv.json` (content) + `cv.ts` (typed view)
 - `src/entry-server.tsx` + `scripts/prerender.mjs` — the build-time prerender
 - `public/cv.pdf` — the rendered CV, offered as a download

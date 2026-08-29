@@ -151,3 +151,70 @@ export function parsePost(source: string, raw: string): ParsedPost {
     body,
   };
 }
+
+/** A frontmatter value that cannot be represented in this format. */
+function rejectUnwritable(key: string, value: string): void {
+  if (value.includes("\n")) {
+    throw new Error(`${key} must not contain a newline`);
+  }
+}
+
+/**
+ * True if writing `value` bare would round-trip wrong.
+ *
+ * {@link parsePost} strips one layer of matching quotes, so a value that both
+ * starts and ends with the same quote character would come back shorter than
+ * it went in. Wrapping it in the *other* quote character is unambiguous,
+ * because a string cannot start and end with both.
+ */
+function wouldBeUnquoted(value: string): boolean {
+  const first = value.slice(0, 1);
+  return value.length >= 2 && (first === '"' || first === "'") && value.endsWith(first);
+}
+
+function writeValue(value: string): string {
+  if (!wouldBeUnquoted(value)) {
+    return value;
+  }
+  return value.startsWith('"') ? `'${value}'` : `"${value}"`;
+}
+
+/**
+ * Render metadata and a body back into a post file.
+ *
+ * The inverse of {@link parsePost}, kept beside it so the two cannot drift:
+ * `frontmatter.test.ts` asserts the round trip rather than the output text.
+ */
+export function serializePost(meta: PostMeta, body: string): string {
+  rejectUnwritable("title", meta.title);
+  rejectUnwritable("summary", meta.summary);
+  if (!DATE_PATTERN.test(meta.date)) {
+    throw new Error(`date must be YYYY-MM-DD, got "${meta.date}"`);
+  }
+  for (const tag of meta.tags) {
+    if (/[,\]\n]/.test(tag)) {
+      throw new Error(`tag "${tag}" must not contain a comma, bracket or newline`);
+    }
+  }
+
+  const lines = [
+    DELIMITER,
+    `title: ${writeValue(meta.title)}`,
+    `date: ${meta.date}`,
+    `summary: ${writeValue(meta.summary)}`,
+  ];
+  if (meta.tags.length > 0) {
+    lines.push(`tags: [${meta.tags.join(", ")}]`);
+  }
+  if (meta.cover !== null) {
+    rejectUnwritable("cover", meta.cover);
+    lines.push(`cover: ${writeValue(meta.cover)}`);
+  }
+  // Only written when true: an absent `draft` already means published, and a
+  // file full of defaults is harder to read than one stating what is unusual.
+  if (meta.draft) {
+    lines.push("draft: true");
+  }
+  lines.push(DELIMITER, "", `${body.trim()}\n`);
+  return lines.join("\n");
+}

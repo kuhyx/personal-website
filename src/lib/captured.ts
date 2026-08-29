@@ -10,3 +10,13 @@
 export function captured(match: RegExpMatchArray, index: number): string {
   return match[index] ?? "";
 }
+
+/**
+ * Read an element a length check has already guaranteed is there.
+ *
+ * The array-shaped half of {@link captured}: after `if (parts.length !== 6)`,
+ * `parts[4]` is still `string | undefined` to the compiler.
+ */
+export function element(values: readonly string[], index: number): string {
+  return values[index] ?? "";
+}

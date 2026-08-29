@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { captured } from "./captured";
+import { captured, element } from "./captured";
 
 describe("captured", () => {
   it("returns a group that matched", () => {
@@ -18,5 +18,15 @@ describe("captured", () => {
       throw new Error("pattern should match");
     }
     expect(captured(match, 9)).toBe("");
+  });
+});
+
+describe("element", () => {
+  it("reads an element that is there", () => {
+    expect(element(["a", "b"], 1)).toBe("b");
+  });
+
+  it("answers with an empty string past the end", () => {
+    expect(element(["a"], 4)).toBe("");
   });
 });
