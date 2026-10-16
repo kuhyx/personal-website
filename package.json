@@ -6,10 +6,11 @@
   "description": "Personal website for kuhy.duckdns.org — projects showcase + CV.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && vite build --ssr src/entry-server.tsx --outDir dist-ssr && node scripts/prerender.mjs",
+    "build": "node scripts/lint-blog.mjs && tsc -b && vite build && vite build --ssr src/entry-server.tsx --outDir dist-ssr && node scripts/prerender.mjs",
     "build:admin": "vite build --ssr scripts/admin.mjs --outDir dist-admin && vite build --config vite.admin.config.ts",
     "admin": "node dist-admin/admin.js",
-    "lint": "tsc --noEmit && eslint src",
+    "lint:blog": "node scripts/lint-blog.mjs",
+    "lint": "node scripts/lint-blog.mjs && tsc --noEmit && eslint src",
     "preview": "vite preview",
     "test": "vitest run",
     "coverage": "vitest run --coverage"
@@ -17,8 +18,8 @@
   "dependencies": {
     "highlight.js": "11.12.0",
     "lowlight": "3.3.0",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "react-markdown": "10.1.0",
     "react-router": "8.4.0",
     "remark-gfm": "4.0.1"
@@ -27,20 +28,20 @@
     "@eslint/js": "10.0.1",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",
-    "@testing-library/user-event": "14.6.7",
+    "@testing-library/user-event": "14.6.8",
     "@types/hast": "3.0.5",
-    "@types/node": "26.6.4",
+    "@types/node": "26.6.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
-    "@vitejs/plugin-react": "6.1.1",
-    "@vitest/coverage-v8": "5.0.3",
+    "@vitejs/plugin-react": "6.1.2",
+    "@vitest/coverage-v8": "5.0.4",
     "eslint": "10.12.0",
     "eslint-plugin-react-hooks": "7.1.1",
-    "jsdom": "30.1.1",
+    "jsdom": "30.1.3",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.71.0",
-    "vite": "8.3.2",
-    "vitest": "5.0.3"
+    "typescript-eslint": "8.71.2",
+    "vite": "8.3.4",
+    "vitest": "5.0.4"
   },
-  "packageManager": "pnpm@12.9.0"
+  "packageManager": "pnpm@12.11.2"
 }
