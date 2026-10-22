@@ -3,6 +3,7 @@ import {
   escapeHtml,
   metaForPath,
   postMeta,
+  isKnownPage,
   prerenderRoutes,
   renderHead,
 } from "./head";
@@ -124,5 +125,20 @@ describe("prerenderRoutes", () => {
     for (const entry of publishedPosts) {
       expect(routes).toContain(`/blog/${entry.slug}`);
     }
+  });
+});
+
+describe("isKnownPage", () => {
+  it.each(["/", "/blog", "/blog/", "/blog//"])("knows %s", (path) => {
+    expect(isKnownPage(path)).toBe(true);
+  });
+
+  it("knows every published post", () => {
+    const post = first(publishedPosts, "published post");
+    expect(isKnownPage(`/blog/${post.slug}`)).toBe(true);
+  });
+
+  it.each(["/blog/typo", "/no/such/page", "/404"])("does not know %s", (path) => {
+    expect(isKnownPage(path)).toBe(false);
   });
 });

@@ -130,7 +130,12 @@ Posts written here are ordinary files: commit them like any other change.
 - `src/lib/` — `github.ts` (projects feed + language breakdown), `duration.ts`
   (live job durations), `markup.tsx` (`**bold**` rendering), `frontmatter.ts`
   + `posts.ts` + `markdown-images.ts` (the blog corpus), `head.ts` (per-page meta tags), `site.ts`
-  (the public origin), `rehype-highlight-lite.ts` (code fences)
+  (the public origin), `rehype-highlight-lite.ts` (code fences);
+  agent-facing build output (AgentReady): `artifacts.ts` (every file written
+  to `dist/`), `agent-head.ts` (catalog/llms/mirror links + JSON-LD, 404 head),
+  `discovery.ts` (robots.txt, sitemap.xml, llms.txt, ai-catalog.json),
+  `mirror.ts` + `cv-markdown.ts` (`/index.md`, `/blog.md`, `/blog/<slug>.md`),
+  `jsonld.ts`
 - `src/components/` — `hero`, `projects`, `project-card`, `cv-section`,
   `experience-item`, `site-nav`, `home`, `blog-index`, `post-page`,
   `post-body`, `post-meta`, `not-found`

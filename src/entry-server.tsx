@@ -10,8 +10,8 @@ import { StrictMode } from "react";
 import { renderToString } from "react-dom/server";
 import { StaticRouter } from "react-router";
 import { App } from "./app";
-import { metaForPath, prerenderRoutes, renderHead } from "./lib/head";
-import { inject, outputPath } from "./lib/template";
+import { headFor } from "./lib/agent-head";
+import { siteFiles } from "./lib/artifacts";
 
 /** Render one route to the markup and `<head>` block the template needs. */
 export function render(path: string): { html: string; head: string } {
@@ -22,12 +22,14 @@ export function render(path: string): { html: string; head: string } {
       </StaticRouter>
     </StrictMode>,
   );
-  return { html, head: renderHead(metaForPath(path)) };
+  return { html, head: headFor(path) };
 }
 
-/** Every route to emit an HTML file for. */
-export const routes = prerenderRoutes;
-
-// Re-exported so scripts/prerender.mjs stays pure file I/O: everything it
-// decides is typechecked, linted and tested in src/.
-export { inject, outputPath };
+/**
+ * Every file to write into `dist/`, given the built `index.html`. Kept here so
+ * scripts/prerender.mjs stays pure file I/O: everything it writes is decided,
+ * typechecked, linted and tested in src/.
+ */
+export function files(template: string): { file: string; contents: string }[] {
+  return siteFiles(template, render);
+}

@@ -5,6 +5,7 @@ import { BrowserRouter, StaticRouter } from "react-router";
 import { describe, expect, it, vi } from "vitest";
 import { App } from "./app";
 import { prerenderRoutes } from "./lib/head";
+import { NOT_FOUND_ROUTE } from "./lib/agent-head";
 
 /**
  * The prerendered HTML and the hydrated client tree must agree.
@@ -15,11 +16,22 @@ import { prerenderRoutes } from "./lib/head";
  * console.error, so it can be adjudicated by an exit code.
  */
 describe("prerender/hydrate agreement", () => {
-  for (const route of prerenderRoutes()) {
+  // 404.html is prerendered once at NOT_FOUND_ROUTE but served at whatever
+  // address was mistyped, so it must hydrate cleanly at an unrelated path.
+  const cases: [string, string][] = [
+    ...prerenderRoutes().map((route): [string, string] => [route, route]),
+    [NOT_FOUND_ROUTE, "/no/such/page"],
+    // A mistyped post URL matches /blog/:slug on the client, so the Blog
+    // NavLink would turn active there while the 404 HTML has it inactive.
+    [NOT_FOUND_ROUTE, "/blog/typo"],
+    // Caddy serves blog/index.html for /blog/ too.
+    ["/blog", "/blog/"],
+  ];
+  for (const [rendered, route] of cases) {
     it(`hydrates ${route} without warnings`, async () => {
       const html = renderToString(
         <StrictMode>
-          <StaticRouter location={route}>
+          <StaticRouter location={rendered}>
             <App />
           </StaticRouter>
         </StrictMode>,

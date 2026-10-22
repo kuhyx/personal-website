@@ -1,9 +1,11 @@
 // ============================================================================
 // Write one real HTML file per route, so every post has its own <title> and
 // OpenGraph tags. Link-preview scrapers do not run JavaScript, so without this
-// every shared post URL would preview as the site-wide title.
+// every shared post URL would preview as the site-wide title. Alongside them:
+// 404.html, robots.txt, sitemap.xml, llms.txt, .well-known/ai-catalog.json
+// and one markdown mirror per page.
 //
-// Strictly file I/O. Every decision -- which routes, what markup, what <head>,
+// Strictly file I/O. Every decision -- which files, what markup, what <head>,
 // where each file goes, how the template is spliced -- comes from
 // `src/entry-server.tsx` and the modules it re-exports, because `scripts/`
 // sits outside both tsconfig's `include` and `pnpm lint`'s `eslint src` and
@@ -21,19 +23,17 @@ const DIST = join(ROOT, "dist");
 const SERVER_ENTRY = join(ROOT, "dist-ssr", "entry-server.js");
 
 async function main() {
-  const { render, routes, inject, outputPath } = await import(
-    pathToFileURL(SERVER_ENTRY).href
-  );
+  const { files } = await import(pathToFileURL(SERVER_ENTRY).href);
   const template = await readFile(join(DIST, "index.html"), "utf8");
 
-  const all = routes();
-  for (const route of all) {
-    const target = join(DIST, outputPath(route));
+  const all = files(template);
+  for (const { file, contents } of all) {
+    const target = join(DIST, file);
     await mkdir(dirname(target), { recursive: true });
-    await writeFile(target, inject(template, render(route)), "utf8");
+    await writeFile(target, contents, "utf8");
   }
 
-  console.log(`Prerendered ${String(all.length)} route(s): ${all.join(", ")}`);
+  console.log(`Prerendered ${String(all.length)} file(s): ${all.map((f) => f.file).join(", ")}`);
 }
 
 await main();

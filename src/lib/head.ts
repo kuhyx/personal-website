@@ -107,3 +107,14 @@ export function metaForPath(path: string): PageMeta {
 export function prerenderRoutes(): string[] {
   return ["/", "/blog", ...publishedPosts.map((post) => `/blog/${post.slug}`)];
 }
+
+/**
+ * True when `path` is a real page rather than the not-found view.
+ *
+ * Trailing slashes are ignored, as the router ignores them: Caddy serves
+ * `blog/index.html` for `/blog/` too.
+ */
+export function isKnownPage(path: string): boolean {
+  const normalized = path.replace(/\/+$/, "") || "/";
+  return prerenderRoutes().includes(normalized);
+}

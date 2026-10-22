@@ -11,9 +11,21 @@ describe("NotFound", () => {
       </MemoryRouter>,
     );
     expect(screen.getByRole("heading", { name: "Not found" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Back to the blog" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "read the blog" })).toHaveAttribute(
       "href",
       "/blog",
+    );
+  });
+
+  it("offers a way back to the home page", () => {
+    render(
+      <MemoryRouter>
+        <NotFound />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole("link", { name: "Go to the home page" })).toHaveAttribute(
+      "href",
+      "/",
     );
   });
 });
