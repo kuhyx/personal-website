@@ -1,0 +1,9 @@
+---
+import NotFound from "../components/not-found.astro";
+import Base from "../layouts/base.astro";
+import { NOT_FOUND_ROUTE } from "../lib/agent-head";
+---
+
+<Base path={NOT_FOUND_ROUTE} current={null}>
+  <NotFound />
+</Base>

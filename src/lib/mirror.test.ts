@@ -2,7 +2,9 @@ import { describe, it, expect } from "vitest";
 import {
   blogIndexMarkdown,
   markdownFor,
+  mirrorParam,
   mirrorPath,
+  routeForMirrorParam,
   postMarkdown,
 } from "./mirror";
 import { buildPosts, publishedPosts, type Post } from "./posts";
@@ -29,6 +31,23 @@ describe("mirrorPath", () => {
     ["/blog/a-post", "/blog/a-post.md"],
   ])("maps %s to %s", (route, expected) => {
     expect(mirrorPath(route)).toBe(expected);
+  });
+});
+
+describe("mirrorParam / routeForMirrorParam", () => {
+  it.each([
+    ["/", "index"],
+    ["/blog", "blog"],
+    ["/blog/x", "blog/x"],
+  ])("maps %s to the [...path].md parameter %s and back", (route, param) => {
+    expect(mirrorParam(route)).toBe(param);
+    expect(routeForMirrorParam(param)).toBe(route);
+  });
+
+  it("round-trips every prerendered route", () => {
+    for (const route of prerenderRoutes()) {
+      expect(routeForMirrorParam(mirrorParam(route))).toBe(route);
+    }
   });
 });
 

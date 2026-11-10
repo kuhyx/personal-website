@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   allPosts,
   buildPosts,
-  findPost,
+  requirePost,
   imageKey,
   imageReferences,
   isRemoteImage,
@@ -114,8 +114,10 @@ describe("the corpus on disk", () => {
 
   it("finds a post by slug, and nothing by a bad one", () => {
     const post = first(publishedPosts, "post");
-    expect(findPost(post.slug)).toBe(post);
-    expect(findPost("definitely-not-a-post")).toBeUndefined();
+    expect(requirePost(post.slug)).toBe(post);
+    expect(() => requirePost("definitely-not-a-post")).toThrow(
+      'No published post "definitely-not-a-post"',
+    );
   });
 
   // The guarantee: a mistyped image path fails here, in milliseconds, rather

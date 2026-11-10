@@ -1,0 +1,26 @@
+---
+/**
+ * One page per published post, from the `blog` content collection.
+ *
+ * The collection renders the body; `lib/posts.ts` reads the same files for
+ * the metadata every other output shares (head, JSON-LD, sitemap, mirrors).
+ * A post one side sees and the other does not fails the build here.
+ */
+import { getCollection, render } from "astro:content";
+import PostPage from "../../components/post-page.astro";
+import Base from "../../layouts/base.astro";
+import { requirePost } from "../../lib/posts";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("blog", (entry) => !entry.data.draft);
+  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const post = requirePost(entry.id);
+const { Content } = await render(entry);
+---
+
+<Base path={`/blog/${post.slug}`} current="/blog">
+  <PostPage meta={post.meta}><Content /></PostPage>
+</Base>

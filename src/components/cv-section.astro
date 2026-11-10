@@ -1,0 +1,81 @@
+---
+/** The CV: experience, education, skills, volunteering, and side projects. */
+import { cv } from "../data/cv";
+import ExperienceItem from "./experience-item.astro";
+import Markup from "./markup.astro";
+---
+
+<section class="cv" aria-labelledby="cv-heading">
+  <div class="cv__header">
+    <h2 id="cv-heading">CV</h2>
+    <a class="cv__download" href="/cv.pdf" download>Download PDF</a>
+  </div>
+
+  <h3 class="cv__subheading">Experience</h3>
+  {cv.experience.map((job) => <ExperienceItem job={job} />)}
+
+  <h3 class="cv__subheading">Education</h3>
+  {
+    cv.education.map((school) => (
+      <div class="cv__block">
+        <p class="cv__block-title">{school.institutionEn}</p>
+        <ul>
+          {school.entries.map((entry) => (
+            <li>
+              <strong>{entry.degreeEn}</strong> — {entry.detailEn}
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))
+  }
+
+  <h3 class="cv__subheading">Skills</h3>
+  <dl class="cv__skills">
+    {
+      cv.skills.map((skill) => (
+        <div>
+          <dt>{skill.labelEn}</dt>
+          <dd>
+            <Markup text={skill.valueEn} />
+          </dd>
+        </div>
+      ))
+    }
+  </dl>
+
+  <h3 class="cv__subheading">Volunteering</h3>
+  {
+    cv.volunteer.map((org) => (
+      <div class="cv__block">
+        <p class="cv__block-title">{org.orgEn}</p>
+        <ul>
+          {org.rolesEn.map((role) => (
+            <li>{role}</li>
+          ))}
+        </ul>
+        <p>{org.descEn}</p>
+      </div>
+    ))
+  }
+
+  <h3 class="cv__subheading">Side projects</h3>
+  <ul class="cv__side-projects">
+    {
+      cv.sideProjects.map((sideProject) => (
+        <li>
+          <a href={sideProject.url} target="_blank" rel="noreferrer">
+            {sideProject.titleEn}
+          </a>{" "}
+          — <Markup text={sideProject.descEn} />
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<script>
+  import { fillDurations } from "../lib/cv-durations";
+
+  fillDurations(document);
+</script>

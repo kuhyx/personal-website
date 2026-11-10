@@ -1,2 +1,9 @@
 minimumReleaseAgeExclude:
-  - react-router@8.3.1
+  - astro@7.4.7
+  - "@vitest/coverage-v8@5.1.0"
+  - "@vitest/mocker@5.1.0"
+  - "@vitest/spy@5.1.0"
+  - vitest@5.1.0
+  - "@astrojs/internal-helpers@0.13.1"
+  - "@astrojs/markdown-satteri@0.4.7"
+  - "@astrojs/markdown-remark@7.3.6"

@@ -1,0 +1,9 @@
+---
+import BlogIndex from "../../components/blog-index.astro";
+import Base from "../../layouts/base.astro";
+import { publishedPosts } from "../../lib/posts";
+---
+
+<Base path="/blog" current="/blog">
+  <BlogIndex posts={publishedPosts} />
+</Base>

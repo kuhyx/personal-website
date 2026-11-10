@@ -17,6 +17,19 @@ export function mirrorPath(route: string): string {
   return route === "/" ? "/index.md" : `${route}.md`;
 }
 
+/**
+ * The `[...path].md` route parameter for a route's mirror: `/` -> `index`,
+ * `/blog/x` -> `blog/x`. The inverse of {@link routeForMirrorParam}.
+ */
+export function mirrorParam(route: string): string {
+  return mirrorPath(route).slice(1, -".md".length);
+}
+
+/** The page route a `[...path].md` parameter mirrors: `index` -> `/`. */
+export function routeForMirrorParam(param: string): string {
+  return param === "index" ? "/" : `/${param}`;
+}
+
 /** Escape text for use inside `[...]`, so a `]` in a title cannot end the link. */
 export function linkText(text: string): string {
   return text.replace(/[[\]\\]/g, "\\$&");

@@ -111,7 +111,17 @@ export const publishedPosts: readonly Post[] = allPosts.filter(
   (post) => !post.meta.draft,
 );
 
-/** The published post with this slug, or undefined. */
-export function findPost(slug: string): Post | undefined {
-  return publishedPosts.find((post) => post.slug === slug);
+/**
+ * The published post with this slug.
+ *
+ * @throws {Error} If there is none. The blog pages are generated from the
+ * content collection, which reads the same files; a slug the collection has
+ * and this corpus lacks means the two disagree, and the build should say so.
+ */
+export function requirePost(slug: string): Post {
+  const post = publishedPosts.find((entry) => entry.slug === slug);
+  if (post === undefined) {
+    throw new Error(`No published post "${slug}" in src/content/blog/`);
+  }
+  return post;
 }

@@ -11,10 +11,13 @@ time so each one has its own title and link preview.
 
 ## Stack
 
-- React 19 + Vite 8 + TypeScript (strict)
-- react-router, react-markdown + remark-gfm, lowlight for code fences
-- ESLint 10 flat config, `typescript-eslint` strict + stylistic (type-aware)
-- Vitest + Testing Library, 100% coverage enforced
+- Astro 7 (static output, no UI framework) + TypeScript (strict); live parts
+  are `<script>` modules in `src/lib/`
+- Content collection + remark-gfm, lowlight for code fences
+- `@kuhyx/web-ui` `tokens.css`
+- ESLint 10 flat config, `typescript-eslint` strict + stylistic (type-aware),
+  `eslint-plugin-astro`; `astro check` for `.astro` files
+- Vitest (jsdom, Astro Container API), 100% coverage enforced on `src/**/*.ts`
 - Package manager: pnpm
 
 ## Commands
@@ -22,15 +25,14 @@ time so each one has its own title and link preview.
 ```bash
 pnpm install
 pnpm dev        # local dev server
-pnpm lint       # tsc --noEmit && eslint src
+pnpm lint       # blog lint, astro sync, tsc --noEmit, eslint src, astro check
 pnpm test       # vitest run
 pnpm coverage   # vitest run --coverage (100% thresholds)
-pnpm build      # typecheck, bundle, SSR bundle, then prerender -> dist/
+pnpm build      # blog lint, astro check, astro build -> dist/
 ```
 
-`pnpm preview` is *not* a faithful copy of production: it rewrites every path
-to the SPA shell, so prerendered post pages appear as the landing page. To
-check the real thing, serve `dist/` with the deployed Caddy config.
+`pnpm preview` serves `dist/`, but only Caddy's config answers a missing path
+with `404.html` and a real 404 status.
 
 ## Writing a post
 
@@ -49,8 +51,8 @@ CLAUDE\* / DOCS\* / TODO\* basenames. A post must also avoid the removal marker
 that gate reserves for TODO files — writing it here would be enough to fail the
 check, which is why this sentence does not quote it.
 
-Frontmatter is strict — an unknown or malformed key fails the build and names
-the file:
+Frontmatter is strict (`src/lib/post-schema.ts`) — an unknown or malformed key
+fails the build and names the file:
 
 ```yaml
 ---
@@ -63,7 +65,7 @@ draft: false            # optional; true hides it everywhere
 ---
 ```
 
-Images are resolved through Vite, so they get content-hashed URLs and a
+Images are resolved at build time, so they get content-hashed URLs and a
 mistyped path **fails `pnpm test`** rather than shipping as a 404. Assets under
 `src/content/blog/` are never inlined as data URIs, because a `cover:` has to
 be a real fetchable URL for `og:image`.
@@ -120,23 +122,27 @@ What the service guarantees, and why each one is a test rather than a habit:
   never need to be blocked individually.
 - Builds are serialised: two saves in a row queue rather than sharing `dist/`.
 - Login is throttled globally — five failures buys a 15-minute lockout.
-- A save skips `tsc`, which is what makes it ~0.6 s rather than ~2.4 s. Prose
-  changes no types; anything that does still goes through `pnpm build` and CI.
+- A save runs the full `pnpm build` (blog lint, `astro check`, `astro build`).
 
 Posts written here are ordinary files: commit them like any other change.
 
 ## Layout
 
-- `src/lib/` — `github.ts` (projects feed + language breakdown), `duration.ts`
-  (live job durations), `markup.tsx` (`**bold**` rendering), `frontmatter.ts`
-  + `posts.ts` + `markdown-images.ts` (the blog corpus), `head.ts` (per-page meta tags), `site.ts`
-  (the public origin), `rehype-highlight-lite.ts` (code fences);
-  agent-facing build output (AgentReady): `artifacts.ts` (every file written
-  to `dist/`), `agent-head.ts` (catalog/llms/mirror links + JSON-LD, 404 head),
+- `src/lib/` — `github.ts` + `projects.ts` (projects feed, rendered in the
+  browser), `duration.ts` + `cv-durations.ts` (live job durations),
+  `markup.ts` (`**bold**` runs), `frontmatter.ts` + `post-schema.ts` +
+  `posts.ts` + `markdown-images.ts` (the blog corpus), `head.ts` (per-page
+  meta tags), `nav.ts`, `site.ts` (the public origin),
+  `rehype-highlight-lite.ts` + `rehype-external-links.ts` (markdown);
+  agent-facing output (AgentReady): `agent-head.ts` (catalog/llms/mirror links + JSON-LD, 404 head),
   `discovery.ts` (robots.txt, sitemap.xml, llms.txt, ai-catalog.json),
   `mirror.ts` + `cv-markdown.ts` (`/index.md`, `/blog.md`, `/blog/<slug>.md`),
   `jsonld.ts`
-- `src/components/` — `hero`, `projects`, `project-card`, `cv-section`,
+- `src/pages/` — routes (`index`, `blog/index`, `blog/[slug]`, `404`) and
+  endpoints (`robots.txt`, `sitemap.xml`, `llms.txt`,
+  `.well-known/ai-catalog.json`, `[...path].md`); `src/layouts/base.astro`
+- `src/content.config.ts` — the `blog` collection
+- `src/components/` — `.astro`: `hero`, `projects`, `markup`, `cv-section`,
   `experience-item`, `site-nav`, `home`, `blog-index`, `post-page`,
   `post-body`, `post-meta`, `not-found`
 - `src/content/blog/` — the posts
@@ -146,7 +152,6 @@ Posts written here are ordinary files: commit them like any other change.
   `process.ts` / `config.ts`
 - `src/admin/client/index.html` — the editor page, one dependency-free file
 - `src/data/` — `cv.json` (content) + `cv.ts` (typed view)
-- `src/entry-server.tsx` + `scripts/prerender.mjs` — the build-time prerender
 - `public/cv.pdf` — the rendered CV, offered as a download
 
 ## Deployment

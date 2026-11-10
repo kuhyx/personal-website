@@ -159,24 +159,51 @@ function rejectUnwritable(key: string, value: string): void {
   }
 }
 
+/** First characters that YAML reads as syntax rather than text. */
+const YAML_INDICATOR = /^[-?:,[\]{}#&*!|>'"%@`\s]/;
+/** Scalars YAML would hand back as a boolean, null or number, not the text. */
+const YAML_SPECIAL = /^(?:true|false|yes|no|on|off|y|n|null|~)$/i;
+const NUMBER_LIKE = /^[-+.]?\d/;
+
 /**
- * True if writing `value` bare would round-trip wrong.
+ * True if writing `value` bare would not read back as the same text.
  *
- * {@link parsePost} strips one layer of matching quotes, so a value that both
- * starts and ends with the same quote character would come back shorter than
- * it went in. Wrapping it in the *other* quote character is unambiguous,
- * because a string cannot start and end with both.
+ * Two readers see this file: {@link parsePost} (the admin) and Astro's YAML
+ * frontmatter parser (`astro build`). A bare `Hello: world` or `C# tips` is
+ * fine for the first and a parse error or a truncated title for the second,
+ * and a value that starts and ends with the same quote loses a layer in the
+ * first. Inside a `[...]` tag list, brackets and braces are syntax too.
  */
-function wouldBeUnquoted(value: string): boolean {
-  const first = value.slice(0, 1);
-  return value.length >= 2 && (first === '"' || first === "'") && value.endsWith(first);
+function needsQuotes(value: string, inFlowList: boolean): boolean {
+  return (
+    /[:#]/.test(value) ||
+    YAML_INDICATOR.test(value) ||
+    YAML_SPECIAL.test(value) ||
+    NUMBER_LIKE.test(value) ||
+    (inFlowList && /[[\]{}]/.test(value))
+  );
 }
 
-function writeValue(value: string): string {
-  if (!wouldBeUnquoted(value)) {
+/**
+ * `value` as both readers will read it back.
+ *
+ * Single quotes first: YAML keeps everything inside them literal except `'`,
+ * and parsePost strips exactly one layer, so the two agree. A value holding a
+ * `'` goes in double quotes, which agree only while there is no `"` or `\`.
+ *
+ * @throws {Error} When neither quote style is safe for the value.
+ */
+function writeValue(key: string, value: string, inFlowList = false): string {
+  if (!needsQuotes(value, inFlowList)) {
     return value;
   }
-  return value.startsWith('"') ? `'${value}'` : `"${value}"`;
+  if (!value.includes("'")) {
+    return `'${value}'`;
+  }
+  if (!/["\\]/.test(value)) {
+    return `"${value}"`;
+  }
+  throw new Error(`${key} cannot hold both quote characters (or ' and a backslash) together with YAML syntax`);
 }
 
 /**
@@ -199,16 +226,16 @@ export function serializePost(meta: PostMeta, body: string): string {
 
   const lines = [
     DELIMITER,
-    `title: ${writeValue(meta.title)}`,
+    `title: ${writeValue("title", meta.title)}`,
     `date: ${meta.date}`,
-    `summary: ${writeValue(meta.summary)}`,
+    `summary: ${writeValue("summary", meta.summary)}`,
   ];
   if (meta.tags.length > 0) {
-    lines.push(`tags: [${meta.tags.join(", ")}]`);
+    lines.push(`tags: [${meta.tags.map((tag) => writeValue("tag", tag, true)).join(", ")}]`);
   }
   if (meta.cover !== null) {
     rejectUnwritable("cover", meta.cover);
-    lines.push(`cover: ${writeValue(meta.cover)}`);
+    lines.push(`cover: ${writeValue("cover", meta.cover)}`);
   }
   // Only written when true: an absent `draft` already means published, and a
   // file full of defaults is harder to read than one stating what is unusual.

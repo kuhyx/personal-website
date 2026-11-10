@@ -1,12 +1,12 @@
 /**
  * Rebuilding the site after a post changes.
  *
- * The three steps are the same ones `pnpm build` runs, minus `tsc`: writing a
- * post changes no types, and skipping the type check is what takes a save from
- * 2.4 s to roughly 0.6 s. Anything that *does* change types goes through the
- * normal build and CI, not through here.
+ * One step: `pnpm build`, the same command CI and a manual build run
+ * (blog lint, `astro check`, `astro build`). The type check costs a few
+ * seconds per save, and buys a rejected save instead of a site that built
+ * from a post `astro check` would have caught.
  *
- * Builds are serialised. Two overlapping `vite build` runs share one `dist/`
+ * Builds are serialised. Two overlapping `astro build` runs share one `dist/`
  * and would interleave their output, so a second save waits for the first
  * rather than racing it.
  */
@@ -25,14 +25,9 @@ export interface BuildResult {
   readonly output: string;
 }
 
-/** The steps a post-only change needs, in order. */
+/** The steps a post change needs, in order. */
 export const BUILD_STEPS: readonly (readonly [string, readonly string[]])[] = [
-  ["node_modules/.bin/vite", ["build"]],
-  [
-    "node_modules/.bin/vite",
-    ["build", "--ssr", "src/entry-server.tsx", "--outDir", "dist-ssr"],
-  ],
-  ["node", ["scripts/prerender.mjs"]],
+  ["pnpm", ["build"]],
 ];
 
 /** Runs rebuilds one at a time. */
@@ -53,8 +48,8 @@ export class Builder {
       const { code, output } = await this.#run(command, args);
       chunks.push(output);
       if (code !== 0) {
-        // Stop at the first failure: running prerender against a bundle that
-        // did not build would report a second, misleading error.
+        // Stop at the first failure: a later step run against a build that
+        // failed would report a second, misleading error.
         return {
           ok: false,
           durationMs: this.#now() - started,

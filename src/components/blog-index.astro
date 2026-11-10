@@ -1,0 +1,32 @@
+---
+/** The post list, newest first. */
+import type { Post } from "../lib/posts";
+import PostMetaLine from "./post-meta.astro";
+
+interface Props {
+  readonly posts: readonly Post[];
+}
+
+const { posts } = Astro.props;
+---
+
+<section class="blog" aria-labelledby="blog-heading">
+  <h1 id="blog-heading">Blog</h1>
+  {
+    posts.length === 0 ? (
+      <p>Nothing published yet.</p>
+    ) : (
+      <ul class="blog__list">
+        {posts.map((post) => (
+          <li class="blog__entry">
+            <h2>
+              <a href={`/blog/${post.slug}`}>{post.meta.title}</a>
+            </h2>
+            <PostMetaLine meta={post.meta} />
+            <p class="blog__summary">{post.meta.summary}</p>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+</section>

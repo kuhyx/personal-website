@@ -1,0 +1,40 @@
+---
+/**
+ * The page shell every route shares: `<head>` (title, description, OpenGraph,
+ * canonical, discovery links, JSON-LD) from `lib/agent-head.ts`, the shared
+ * design tokens, then the site nav above the page's own content.
+ */
+import "@kuhyx/web-ui/tokens.css";
+import "../styles/index.css";
+import SiteNav from "../components/site-nav.astro";
+import { headFor } from "../lib/agent-head";
+import type { NavItem } from "../lib/nav";
+
+interface Props {
+  /** The route this page is, or `NOT_FOUND_ROUTE` for the 404 page. */
+  readonly path: string;
+  /** The nav item to mark current; null on the not-found page. */
+  readonly current: NavItem | null;
+}
+
+const { path, current } = Astro.props;
+const FAVICON =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232f5cff'/%3E%3Ctext x='16' y='22' font-family='system-ui,sans-serif' font-size='15' font-weight='700' fill='white' text-anchor='middle'%3EKR%3C/text%3E%3C/svg%3E";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="build-id" content={import.meta.env.PUBLIC_BUILD_ID} />
+    <link rel="icon" href={FAVICON} />
+    <Fragment set:html={headFor(path)} />
+  </head>
+  <body>
+    <main class="page">
+      <SiteNav current={current} />
+      <slot />
+    </main>
+  </body>
+</html>

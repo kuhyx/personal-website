@@ -1,0 +1,15 @@
+---
+/** Date line and tag list, shared by the blog index and a post's header. */
+import { formatDate } from "../lib/format-date";
+import type { PostMeta } from "../lib/frontmatter";
+
+interface Props {
+  readonly meta: PostMeta;
+}
+
+const { meta } = Astro.props;
+---
+
+<p class="post-meta">
+  <time datetime={meta.date}>{formatDate(meta.date)}</time>{meta.tags.map((tag) => <span class="post-meta__tag">{tag}</span>)}
+</p>

@@ -1,0 +1,35 @@
+---
+/**
+ * A single job in the CV. An ongoing job's duration is written as of the
+ * build and recomputed in the browser (`lib/cv-durations.ts`); a finished job
+ * may pin a fixed label instead.
+ */
+import type { ExperienceJob } from "../data/cv";
+import { computeDuration, formatDuration } from "../lib/duration";
+import Markup from "./markup.astro";
+
+interface Props {
+  readonly job: ExperienceJob;
+}
+
+const { job } = Astro.props;
+const pinned = job.durationEn;
+const built = formatDuration(computeDuration(job.start, job.end));
+---
+
+<article class="experience">
+  <h3 class="experience__role">{job.roleEn} · {job.company}</h3>
+  <p class="experience__dates">
+    {job.startLabelEn} – {job.endLabelEn} ·{" "}
+    {pinned ?? <span data-duration-start={job.start} data-duration-end={job.end ?? undefined}>{built}</span>}
+  </p>
+  <ul class="experience__items">
+    {
+      job.items.map((item) => (
+        <li>
+          <strong>{item.titleEn}</strong> — <Markup text={item.descEn} />
+        </li>
+      ))
+    }
+  </ul>
+</article>

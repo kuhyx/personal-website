@@ -1,0 +1,22 @@
+---
+/**
+ * The projects showcase. Ships as "Loading projects…"; the script below
+ * replaces that with one live fetch of the public GitHub repos.
+ */
+---
+
+<section class="projects" aria-labelledby="projects-heading">
+  <h2 id="projects-heading">Projects</h2>
+  <div class="projects__body" data-projects>
+    <p>Loading projects…</p>
+  </div>
+</section>
+
+<script>
+  import { mountProjects } from "../lib/projects";
+
+  const container = document.querySelector<HTMLElement>("[data-projects]");
+  if (container !== null) {
+    void mountProjects(container);
+  }
+</script>

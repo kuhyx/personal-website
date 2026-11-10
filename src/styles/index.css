@@ -98,6 +98,12 @@ h2 {
   padding-bottom: var(--space-1);
 }
 
+/* The live-rendered half of the projects section: a mount point for
+   lib/projects.ts that must not add a box of its own. */
+.projects__body {
+  display: contents;
+}
+
 .projects__grid {
   display: grid;
   gap: var(--space-3);

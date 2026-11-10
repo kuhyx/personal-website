@@ -17,8 +17,7 @@ describe("Builder", () => {
     const result = await new Builder(run, clock()).build();
     expect(result.ok).toBe(true);
     expect(seen).toHaveLength(BUILD_STEPS.length);
-    expect(seen[0]).toContain("vite build");
-    expect(seen[2]).toContain("prerender.mjs");
+    expect(seen).toEqual(["pnpm build"]);
   });
 
   it("measures how long the build took", async () => {
@@ -32,14 +31,16 @@ describe("Builder", () => {
     const result = await new Builder(run, clock()).build();
     expect(result.ok).toBe(false);
     expect(result.output).toBe("boom");
-    // Running prerender against a bundle that never built would report a
-    // second error that hides the real one.
+    // A later step run against a build that failed would report a second
+    // error that hides the real one.
     expect(run).toHaveBeenCalledTimes(1);
   });
 
   it("collects output from every step it ran", async () => {
     const run: CommandRunner = () => Promise.resolve({ code: 0, output: "line" });
-    expect((await new Builder(run, clock()).build()).output).toBe("line\nline\nline");
+    expect((await new Builder(run, clock()).build()).output).toBe(
+      BUILD_STEPS.map(() => "line").join("\n"),
+    );
   });
 
   it("serialises overlapping builds instead of interleaving them", async () => {

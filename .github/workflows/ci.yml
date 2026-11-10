@@ -1,7 +1,7 @@
 # Mirrors the local gate exactly, so green-local means green-CI:
-#   pnpm run lint     -> tsc --noEmit && eslint src
+#   pnpm run lint     -> blog lint, astro sync, tsc --noEmit, eslint src, astro check
 #   pnpm run coverage -> vitest, which fails below 100% coverage
-#   pnpm run build    -> tsc -b && vite build
+#   pnpm run build    -> blog lint, astro check, astro build
 name: CI
 
 on:

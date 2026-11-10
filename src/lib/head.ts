@@ -1,10 +1,7 @@
 /**
- * The `<head>` contents injected into each prerendered page.
- *
- * Lives here, in typechecked and tested code, rather than in
- * `scripts/prerender.mjs`: `scripts/` is outside both `tsconfig.json`'s
- * `include` and `pnpm lint`'s `eslint src`, so build-critical logic put there
- * would have no gate at all. The prerender script stays pure file I/O.
+ * The `<head>` contents of each prerendered page, written by
+ * `layouts/base.astro` through `agent-head.ts`. Kept as plain tested
+ * TypeScript so the layout only places the block, never decides it.
  */
 
 import {
@@ -106,15 +103,4 @@ export function metaForPath(path: string): PageMeta {
 /** Every route the prerender step should emit an HTML file for. */
 export function prerenderRoutes(): string[] {
   return ["/", "/blog", ...publishedPosts.map((post) => `/blog/${post.slug}`)];
-}
-
-/**
- * True when `path` is a real page rather than the not-found view.
- *
- * Trailing slashes are ignored, as the router ignores them: Caddy serves
- * `blog/index.html` for `/blog/` too.
- */
-export function isKnownPage(path: string): boolean {
-  const normalized = path.replace(/\/+$/, "") || "/";
-  return prerenderRoutes().includes(normalized);
 }

@@ -1,0 +1,9 @@
+---
+/**
+ * The markdown body of a post. Astro renders it (remark-gfm, lowlight via
+ * `lib/rehype-highlight-lite.ts`, external links via
+ * `lib/rehype-external-links.ts`) and hands it over as the default slot.
+ */
+---
+
+<div class="prose"><slot /></div>

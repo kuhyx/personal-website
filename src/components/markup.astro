@@ -1,0 +1,12 @@
+---
+/** cv.json text with its `**bold**` runs rendered as `<strong>`. */
+import { markupSegments } from "../lib/markup";
+
+interface Props {
+  readonly text: string;
+}
+
+const segments = markupSegments(Astro.props.text);
+---
+
+{segments.map((segment) => (segment.bold ? <strong>{segment.text}</strong> : segment.text))}
