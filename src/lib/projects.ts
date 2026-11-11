@@ -50,11 +50,19 @@ function externalLink(doc: Document, href: string, text: string, className?: str
   return link;
 }
 
-/** A `p` holding only `icon`, spoken as `label` (the empty and error states). */
+/** A visually-hidden span: read by screen readers, never painted. */
+function spoken(doc: Document, text: string): HTMLSpanElement {
+  return element(doc, "span", text, "sr-only");
+}
+
+/**
+ * A `p` painting only `icon`, with `label` in a spoken-only span (the empty
+ * and error states). A span, not `aria-label`: a paragraph takes no name, and
+ * an alert announces its contents.
+ */
 function glyphLine(doc: Document, icon: IconName, label: string, className: string): HTMLParagraphElement {
   const line = element(doc, "p", undefined, className);
-  line.setAttribute("aria-label", label);
-  line.append(iconElement(doc, icon));
+  line.append(iconElement(doc, icon), spoken(doc, label));
   return line;
 }
 
@@ -79,8 +87,7 @@ export function projectCard(doc: Document, project: Project): HTMLElement {
   const meta = element(doc, "dl", undefined, "project-card__meta");
   const updated = element(doc, "div");
   const term = element(doc, "dt");
-  term.setAttribute("aria-label", "Updated");
-  term.append(iconElement(doc, "updated"));
+  term.append(iconElement(doc, "updated"), spoken(doc, "Updated"));
   updated.append(term, element(doc, "dd", formatMonthYear(project.pushedAt)));
   meta.append(updated);
   card.append(meta);

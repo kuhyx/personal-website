@@ -15,15 +15,6 @@ const REPOS_URL = `https://api.github.com/users/${GITHUB_USER}/repos?per_page=10
 const ALWAYS_SHOW = new Set(["ARAI", "WUT_Computer_Science"]);
 const NEVER_SHOW = new Set(["testsAndMisc-archive"]);
 
-// Fallback descriptions for repos that have none set on GitHub, so every card
-// says something. Real GitHub descriptions always take precedence.
-const FALLBACK_DESCRIPTIONS: Record<string, string> = {
-  testsAndMisc:
-    "Personal automation monorepo — Python tools, Bash scripts, and Linux/Android productivity systems.",
-  ARAI: "Legal-hackathon app: describe a lawsuit, estimate cost and time, and get matched to a mediator.",
-  WUT_Computer_Science:
-    "Coursework and projects from my Computer Science studies at Warsaw University of Technology.",
-};
 
 /** What went wrong fetching the feed, for tailored UI messages. */
 export type GithubErrorKind = "rate-limit" | "http" | "network";
@@ -111,7 +102,8 @@ function toProject(raw: GithubRepoRaw, languages: readonly string[]): Project {
         : [];
   return {
     name: raw.name,
-    description: raw.description ?? FALLBACK_DESCRIPTIONS[raw.name] ?? null,
+    // textgate: only GitHub's own description shows; a repo with none shows none.
+    description: raw.description,
     languages: resolvedLanguages,
     stars: raw.stargazers_count,
     pushedAt: raw.pushed_at,

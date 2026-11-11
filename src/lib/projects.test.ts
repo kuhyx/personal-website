@@ -35,7 +35,8 @@ describe("projectCard", () => {
     expect(card.querySelector(".project-card__langs")?.textContent).toBe("PythonShellDart");
     expect(card.querySelector(".project-card__topics")?.textContent).toBe("pythonlinux");
     expect(getByText(card, "2026-06")).toBeInstanceOf(HTMLElement);
-    expect(card.querySelector('dt[aria-label="Updated"] svg.icon')).not.toBeNull();
+    expect(card.querySelector("dt svg.icon")).not.toBeNull();
+    expect(card.querySelector("dt .sr-only")?.textContent).toBe("Updated");
     expect(getByRole(card, "link", { name: "Live site" })).toHaveAttribute("href", base.homepage);
     expect(getByRole(card, "link", { name: "Live site" }).querySelector("svg.icon")).not.toBeNull();
   });
@@ -73,14 +74,14 @@ describe("mountProjects", () => {
   it("shows the empty glyph when there is nothing to show", async () => {
     const node = container();
     await mountProjects(node, () => Promise.resolve([]));
-    expect(node.querySelector(".projects__state")).toHaveAttribute("aria-label", "No projects to show.");
+    expect(node.querySelector(".projects__state .sr-only")?.textContent).toBe("No projects to show.");
     expect(node).not.toHaveAttribute("aria-busy");
   });
 
   it("shows the failure as an alert", async () => {
     const node = container();
     await mountProjects(node, () => Promise.reject(new GithubError("rate-limit", "GitHub rate limit hit.")));
-    expect(getByRole(node, "alert")).toHaveAttribute("aria-label", "GitHub rate limit hit.");
+    expect(getByRole(node, "alert")).toHaveTextContent("GitHub rate limit hit.");
     expect(getByRole(node, "alert").querySelector("svg.icon")).not.toBeNull();
   });
 
@@ -90,7 +91,7 @@ describe("mountProjects", () => {
     const node = container();
     await mountProjects(node);
     expect(fetchMock).toHaveBeenCalled();
-    expect(getByRole(node, "alert")).toHaveAttribute("aria-label", "Could not reach GitHub.");
+    expect(getByRole(node, "alert")).toHaveTextContent("Could not reach GitHub.");
     vi.unstubAllGlobals();
   });
 });

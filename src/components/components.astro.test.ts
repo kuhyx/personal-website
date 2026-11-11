@@ -138,7 +138,7 @@ describe("blog index", () => {
   });
 
   it("shows the empty glyph when nothing is published", async () => {
-    expect(await render(BlogIndex, { posts: [] })).toContain('<p class="blog__empty" aria-label="Nothing published yet."><svg');
+    expect(await render(BlogIndex, { posts: [] })).toMatch(/<p class="blog__empty"><svg[^]*<span class="sr-only">Nothing published yet\.<\/span><\/p>/);
   });
 });
 

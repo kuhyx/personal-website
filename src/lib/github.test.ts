@@ -148,16 +148,10 @@ describe("fetchRepos", () => {
     expect(await fetchRepos()).toEqual([]);
   });
 
-  it("fills a fallback description only when GitHub has none", async () => {
-    mockFetch({
-      json: [
-        rawRepo({ name: "testsAndMisc", description: null }),
-        rawRepo({ name: "screen-locker", description: null }),
-      ],
-    });
+  it("leaves a repo with no GitHub description without one", async () => {
+    mockFetch({ json: [rawRepo({ name: "testsAndMisc", description: null })] });
     const projects = await fetchRepos();
-    expect(projects[0]?.description).toMatch(/automation monorepo/);
-    expect(projects[1]?.description).toBeNull();
+    expect(projects[0]?.description).toBeNull();
   });
 
   it("returns an empty list when the feed is empty", async () => {
