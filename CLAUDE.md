@@ -10,3 +10,4 @@ Before writing, editing or reviewing ANY post in `src/content/blog/`, load the `
 - lint: `pnpm run lint`
 - coverage: `pnpm run coverage`
 - coverage-gaps: `coverage-gaps coverage/lcov.info`
+- deploy: `scripts/deploy.sh`
