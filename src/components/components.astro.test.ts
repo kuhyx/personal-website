@@ -43,8 +43,8 @@ const META: PostMeta = {
 describe("site nav", () => {
   it("marks Home current on the home page", async () => {
     const html = await render(SiteNav, { current: "/" });
-    expect(html).toContain('<a href="/" class="active" aria-current="page">Home</a>');
-    expect(html).toContain('<a href="/blog">Blog</a>');
+    expect(html).toContain('<a href="/" class="active" aria-current="page" aria-label="Home"><svg class="icon"');
+    expect(html).toContain('<a href="/blog" aria-label="Blog"><svg class="icon"');
   });
 
   it("marks nothing on the not-found page", async () => {
@@ -68,9 +68,9 @@ describe("hero", () => {
 });
 
 describe("projects", () => {
-  it("ships the loading line, a mount point and the fetch script", async () => {
+  it("ships a spinner, a mount point and the fetch script", async () => {
     const html = await render(Projects);
-    expect(html).toContain("Loading projects…");
+    expect(html).toContain('<span class="spinner" role="progressbar" aria-label="Loading projects"></span>');
     expect(html).toContain("data-projects");
     expect(html).toContain("<script");
   });
@@ -93,7 +93,7 @@ describe("experience item", () => {
 
   it("writes an ongoing job's duration as of the build, for the script to refresh", async () => {
     const html = await render(ExperienceItem, { job: ongoing });
-    expect(html).toContain(`<span data-duration-start="${ongoing.start}">2 years and 5 months</span>`);
+    expect(html).toContain(`<span data-duration-start="${ongoing.start}">2y 5m</span>`);
     expect(html).not.toContain("data-duration-end");
   });
 
@@ -137,15 +137,15 @@ describe("blog index", () => {
     expect(html).toContain(`<p class="blog__summary">`);
   });
 
-  it("says so when nothing is published", async () => {
-    expect(await render(BlogIndex, { posts: [] })).toContain("Nothing published yet.");
+  it("shows the empty glyph when nothing is published", async () => {
+    expect(await render(BlogIndex, { posts: [] })).toContain('<p class="blog__empty" aria-label="Nothing published yet."><svg');
   });
 });
 
 describe("post meta and post page", () => {
   it("prints the date and one span per tag", async () => {
     const html = await render(PostMetaLine, { meta: META });
-    expect(html).toContain('<time datetime="2026-08-29">29 August 2026</time>');
+    expect(html).toContain('<time datetime="2026-08-29">2026-08-29</time>');
     expect(html.match(/post-meta__tag/g)).toHaveLength(2);
   });
 
@@ -153,7 +153,7 @@ describe("post meta and post page", () => {
     const html = await render(PostPage, { meta: META }, { default: "<p>Body</p>" });
     expect(html).toContain("<h1>A &lt;post&gt;</h1>");
     expect(html).toContain('<div class="prose"><p>Body</p></div>');
-    expect(html).toContain('<a href="/blog">← All posts</a>');
+    expect(html).toContain('<a href="/blog" aria-label="All posts"><svg class="icon"');
   });
 });
 
@@ -176,15 +176,15 @@ describe("pages", () => {
 
   it("the blog page lists the published posts", async () => {
     const html = await render(BlogPage);
-    expect(html).toContain('<h1 id="blog-heading">Blog</h1>');
+    expect(html).toContain('<h1 id="blog-heading" aria-label="Blog"><svg class="icon"');
   });
 
   it("the 404 page is noindex, with nothing marked current", async () => {
     const html = await render(NotFoundPage);
     expect(html).toContain('<meta name="robots" content="noindex" />');
-    expect(html).toContain("<h1>Not found</h1>");
+    expect(html).toContain('<h1 aria-label="Not found"><svg class="icon"');
     expect(html).not.toContain("aria-current");
-    expect(await render(NotFound)).toContain('<a href="/blog">read the blog</a>');
+    expect(await render(NotFound)).toContain('<a href="/blog" aria-label="Read the blog"><svg');
     expect(NOT_FOUND_ROUTE).toBe("/404");
   });
 });

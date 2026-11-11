@@ -1,6 +1,7 @@
 ---
 /** One post: title, date and tags, the rendered body, and a way back. */
 import type { PostMeta } from "../lib/frontmatter";
+import Icon from "./icon.astro";
 import PostBody from "./post-body.astro";
 import PostMetaLine from "./post-meta.astro";
 
@@ -15,5 +16,5 @@ const { meta } = Astro.props;
   <h1>{meta.title}</h1>
   <PostMetaLine meta={meta} />
   <PostBody><slot /></PostBody>
-  <p class="post__back"><a href="/blog">← All posts</a></p>
+  <p class="post__back"><a href="/blog" aria-label="All posts"><Icon name="back" /></a></p>
 </article>

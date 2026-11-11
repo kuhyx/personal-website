@@ -1,18 +1,24 @@
 ---
-/** Intro block: name, title, one-line summary, and contact links. */
+/**
+ * Intro block: name, one-line summary, and contact links. The links are brand
+ * glyphs with spoken-only labels (textgate); the email address is data. The
+ * degree title is left to the CV's Education block, which already shows it.
+ */
 import { cv } from "../data/cv";
+import Icon from "./icon.astro";
 
 const { header, summary } = cv;
 ---
 
 <header class="hero">
   <h1>{header.name}</h1>
-  <p class="hero__title">{header.titleEn}</p>
   <p class="hero__summary">{summary.en}</p>
   <nav class="hero__links" aria-label="Contact">
     <a href={`mailto:${header.email}`}>{header.email}</a>
-    <a href={header.github} target="_blank" rel="noreferrer">GitHub</a>
-    <a href={header.linkedin} target="_blank" rel="noreferrer">LinkedIn</a>
-    <a href={`https://discord.com/users/${header.discord}`} target="_blank" rel="noreferrer">Discord</a>
+    <a href={header.github} target="_blank" rel="noreferrer" aria-label="GitHub"><Icon name="github" /></a>
+    <a href={header.linkedin} target="_blank" rel="noreferrer" aria-label="LinkedIn"><Icon name="linkedin" /></a>
+    <a href={`https://discord.com/users/${header.discord}`} target="_blank" rel="noreferrer" aria-label="Discord"
+      ><Icon name="discord" /></a
+    >
   </nav>
 </header>

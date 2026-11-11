@@ -1,6 +1,7 @@
 ---
 /** Top-level navigation between the landing page and the blog. */
 import { navLinks, type NavItem } from "../lib/nav";
+import Icon from "./icon.astro";
 
 interface Props {
   readonly current: NavItem | null;
@@ -12,8 +13,13 @@ const links = navLinks(Astro.props.current);
 <nav class="site-nav" aria-label="Site">
   {
     links.map((link) => (
-      <a href={link.href} class:list={{ active: link.current }} aria-current={link.current ? "page" : undefined}>
-        {link.label}
+      <a
+        href={link.href}
+        class:list={{ active: link.current }}
+        aria-current={link.current ? "page" : undefined}
+        aria-label={link.label}
+      >
+        <Icon name={link.icon} />
       </a>
     ))
   }

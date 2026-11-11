@@ -72,25 +72,23 @@ export function computeDuration(
   };
 }
 
-/** Pluralise a unit: `1 year`, `2 years`. */
-function unit(count: number, singular: string): string {
-  return `${count} ${singular}${count === 1 ? "" : "s"}`;
-}
-
 /**
- * Render a {@link Duration} as human text, e.g. `2 years 1 month`.
- * A zero-length duration renders as `less than a month`.
+ * Render a {@link Duration} as numbers and unit symbols, e.g. `2y 1m`.
+ * A zero-length duration renders as `<1m`.
+ *
+ * textgate: the site paints no generated words, so no "years and months".
+ * The PDF (`build_cv.py`) keeps its own wording; the two differ on purpose.
  */
 export function formatDuration(duration: Duration): string {
   const parts: string[] = [];
   if (duration.years > 0) {
-    parts.push(unit(duration.years, "year"));
+    parts.push(`${String(duration.years)}y`);
   }
   if (duration.months > 0) {
-    parts.push(unit(duration.months, "month"));
+    parts.push(`${String(duration.months)}m`);
   }
   if (parts.length === 0) {
-    return "less than a month";
+    return "<1m";
   }
-  return parts.join(" and ");
+  return parts.join(" ");
 }

@@ -1,9 +1,19 @@
 ---
-/** Shown for an unknown address: `404.html`, served by Caddy with a real 404. */
+/**
+ * Shown for an unknown address: `404.html`, served by Caddy with a real 404.
+ * textgate: a missing-page glyph, the status number, and glyph links home and
+ * to the blog; the old sentences are spoken-only labels. The `.sr-only` line
+ * is for screen readers and agents: AgentReady (AR-READ-02) wants a 404 page
+ * that says what happened in text, and nothing paints it.
+ */
+import Icon from "./icon.astro";
 ---
 
-<section class="post">
-  <h1>Not found</h1>
-  <p>Nothing lives at this address. It may have moved, or never existed.</p>
-  <p><a href="/">Go to the home page</a>, or <a href="/blog">read the blog</a>.</p>
+<section class="post not-found">
+  <h1 aria-label="Not found"><Icon name="notFound" /> 404</h1>
+  <p class="sr-only">Nothing lives at this address. It may have moved, or never existed.</p>
+  <p class="not-found__links">
+    <a href="/" aria-label="Go to the home page"><Icon name="home" /></a>
+    <a href="/blog" aria-label="Read the blog"><Icon name="blog" /></a>
+  </p>
 </section>

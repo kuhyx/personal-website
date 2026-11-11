@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
-    <title>Write — kuhy.duckdns.org</title>
+    <title>kuhy.duckdns.org</title>
     <!--
       The editor page. Built by `pnpm build:admin` into dist-admin/client/
       and served from there by the admin service -- it is deliberately not part
@@ -199,72 +199,161 @@
       [hidden] {
         display: none !important;
       }
+      svg.icon {
+        width: 1em;
+        height: 1em;
+        vertical-align: -0.125em;
+        fill: currentColor;
+      }
+      .btn-icon {
+        padding: var(--space-2);
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-1);
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0,0,0,0);
+        white-space: nowrap;
+        border: 0;
+      }
+      #login-view h1 svg.icon {
+        width: 2rem;
+        height: 2rem;
+        color: var(--accent);
+        margin-bottom: var(--space-3);
+      }
+      /* A field's label is its glyph (textgate), beside the input. */
+      .field:has(> .glyph-label) {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        gap: var(--space-2);
+      }
+      .glyph-label {
+        flex: none;
+        padding-top: var(--space-2);
+        color: var(--muted);
+        font-size: 1.25rem;
+      }
+      .posts .icon {
+        color: var(--muted);
+      }
+      .btn-icon svg.icon {
+        width: 1.25rem;
+        height: 1.25rem;
+      }
+      #status {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        font-size: 1.25rem;
+      }
+      #status[data-tone="ok"] {
+        color: var(--accent);
+      }
+      #status[data-tone="busy"] svg.icon {
+        animation: spin 0.9s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
     </style>
+    <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+      <symbol id="icon-pencil" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></symbol>
+      <symbol id="icon-key" viewBox="0 0 24 24"><path d="M12.65 10A5.99 5.99 0 007 6c-3.31 0-6 2.69-6 6s2.69 6 6 6a5.99 5.99 0 005.65-4H17v4h4v-4h2v-4H12.65zM7 14a2 2 0 110-4 2 2 0 010 4z"/></symbol>
+      <symbol id="icon-save" viewBox="0 0 24 24"><path d="M15,9H5V5H15M12,19C10.34,19 9,17.66 9,16C9,14.34 10.34,13 12,13C13.66,13 15,14.34 15,16C15,17.66 13.66,19 12,19M17,3H5C3.89,3 3,3.9 3,5V19C3,20.1 3.9,21 5,21H19C20.1,21 21,20.1 21,19V7L17,3Z"/></symbol>
+      <symbol id="icon-ok" viewBox="0 0 24 24"><path d="M12,2C17.52,2 22,6.48 22,12C22,17.52 17.52,22 12,22C6.48,22 2,17.52 2,12C2,6.48 6.48,2 12,2M11,16.5L18,9.5L16.59,8.09L11,13.67L7.91,10.59L6.5,12L11,16.5Z"/></symbol>
+      <symbol id="icon-error" viewBox="0 0 24 24"><path d="M13,13H11V7H13M13,17H11V15H13M12,2C6.48,2 2,6.48 2,12C2,17.52 6.48,22 12,22C17.52,22 22,17.52 22,12C22,6.48 17.52,2 12,2Z"/></symbol>
+      <symbol id="icon-busy" viewBox="0 0 24 24"><path d="M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z"/></symbol>
+      <symbol id="icon-signin" viewBox="0 0 24 24"><path d="M11 7L9.6 8.4l2.6 2.6H2v2h10.2l-2.6 2.6L11 17l5-5-5-5zm9 12H12v2h8a1 1 0 001-1V8a1 1 0 00-1-1h-8v2h8v10z"/></symbol>
+      <symbol id="icon-signout" viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4a2 2 0 00-2 2v14a2 2 0 002 2h8v-2H4V5z"/></symbol>
+      <symbol id="icon-new" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></symbol>
+      <symbol id="icon-posts" viewBox="0 0 24 24"><path d="M4 6H2v14a2 2 0 002 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12zM12 5.5v9l4-4.5-4-4.5z"/></symbol>
+      <symbol id="icon-date" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></symbol>
+      <symbol id="icon-title" viewBox="0 0 24 24"><path d="M5 4v3h5.5v12h3V7H19V4z"/></symbol>
+      <symbol id="icon-summary" viewBox="0 0 24 24"><path d="M14 17H4v2h10v-2zm6-8H4v2h16V9zM4 15h16v-2H4v2zM4 5v2h16V5H4z"/></symbol>
+      <symbol id="icon-tags" viewBox="0 0 24 24"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4a2 2 0 00-2 2v7c0 .55.22 1.05.59 1.42l9 9A2 2 0 0013 22a2 2 0 001.41-.59l7-7A2 2 0 0022 14a2 2 0 00-.59-1.42zM5.5 7a1.5 1.5 0 110-3 1.5 1.5 0 010 3z"/></symbol>
+      <symbol id="icon-cover" viewBox="0 0 24 24"><path d="M21 19V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></symbol>
+      <symbol id="icon-md" viewBox="0 0 24 24"><path d="M3 3h18v18H3V3zm16 16V5H5v14h14zM7 7h4v4H7V7zm0 6h4v4H7v-4zm6-6h4v4h-4V7zm0 6h2v2h-2v-2z"/></symbol>
+      <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4-2h2V7h4V5H7v6zm-2 4h16v2H5v-2z"/></symbol>
+      <symbol id="icon-delete" viewBox="0 0 24 24"><path d="M6 19a2 2 0 002 2h8a2 2 0 002-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></symbol>
+      <symbol id="icon-draft" viewBox="0 0 24 24"><path d="M11.83,9L15,12.16C15,12.11 15,12.05 15,12C15,10.34 13.66,9 12,9C11.94,9 11.89,9 11.83,9M7.53,9.8L9.08,11.35C9.03,11.56 9,11.77 9,12C9,13.66 10.34,15 12,15C12.22,15 12.44,14.97 12.65,14.92L14.2,16.47C13.53,16.8 12.79,17 12,17C9.24,17 7,14.76 7,12C7,11.21 7.2,10.47 7.53,9.8M2,4.27L4.28,6.55L4.73,7C3.08,8.3 1.78,10 1,12C2.73,16.39 7,19.5 12,19.5C13.55,19.5 15.03,19.2 16.38,18.66L16.81,19.08L19.73,22L21,20.73L3.27,3M12,7C14.76,7 17,9.24 17,12C17,12.64 16.87,13.26 16.64,13.82L19.57,16.75C21.07,15.5 22.27,13.86 23,12C21.27,7.61 17,4.5 12,4.5C10.6,4.5 9.26,4.75 8,5.2L10.17,7.35C10.74,7.13 11.35,7 12,7Z"/></symbol>
+      <symbol id="icon-slug" viewBox="0 0 24 24"><path d="M16,6H13V7.9H16C18.26,7.9 20.1,9.73 20.1,12C20.1,14.26 18.26,16.1 16,16.1H13V18H16C19.31,18 22,15.31 22,12C22,8.68 19.31,6 16,6M3.9,12C3.9,9.73 5.74,7.9 8,7.9H11V6H8C4.69,6 2,8.69 2,12C2,15.31 4.69,18 8,18H11V16.1H8C5.74,16.1 3.9,14.26 3.9,12M8,13H16V11H8V13Z"/></symbol>
+      <symbol id="icon-images" viewBox="0 0 24 24"><path d="M22 16V4a2 2 0 00-2-2H8a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2zm-11-4l2.03 2.71L16 11l4 5H8l3-4zM2 6v14c0 1.1.9 2 2 2h14v-2H4V6H2z"/></symbol>
+    </svg>
   </head>
   <body>
     <main class="page">
       <section id="login-view" class="login" hidden>
-        <h1>Write</h1>
+        <h1 aria-label="Write"><svg class="icon" aria-hidden="true"><use href="#icon-pencil"/></svg></h1>
         <form id="login-form">
           <div class="field">
-            <label for="password">Password</label>
-            <input id="password" type="password" autocomplete="current-password" required />
+            <label for="password" class="glyph-label"><svg class="icon" aria-hidden="true"><use href="#icon-key"/></svg></label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required aria-label="Password" />
           </div>
-          <button class="primary" type="submit">Sign in</button>
+          <button class="primary btn-icon" type="submit" aria-label="Sign in"><svg class="icon" aria-hidden="true"><use href="#icon-signin"/></svg></button>
         </form>
       </section>
 
       <section id="editor-view" hidden>
         <div class="layout">
           <aside class="sidebar">
-            <h1>Posts</h1>
+            <h1 aria-label="Posts"><svg class="icon" aria-hidden="true"><use href="#icon-posts"/></svg></h1>
             <ul class="posts" id="post-list"></ul>
-            <button id="new-post" type="button">New post</button>
-            <button id="logout" type="button">Sign out</button>
+            <button id="new-post" class="btn-icon" type="button" aria-label="New post"><svg class="icon" aria-hidden="true"><use href="#icon-new"/></svg></button>
+            <button id="logout" class="btn-icon" type="button" aria-label="Sign out"><svg class="icon" aria-hidden="true"><use href="#icon-signout"/></svg></button>
           </aside>
 
           <form class="editor" id="post-form">
             <div class="row field">
               <div class="field">
-                <label for="slug">Slug (URL)</label>
-                <input id="slug" required pattern="[a-z0-9]([a-z0-9-]*[a-z0-9])?" />
+                <label for="slug" class="glyph-label"><svg class="icon" aria-hidden="true"><use href="#icon-slug"/></svg></label>
+                <input id="slug" required pattern="[a-z0-9]([a-z0-9-]*[a-z0-9])?" aria-label="Slug (URL)" />
               </div>
               <div class="field">
-                <label for="date">Date</label>
-                <input id="date" type="date" required />
+                <label for="date" class="glyph-label"><svg class="icon" aria-hidden="true"><use href="#icon-date"/></svg></label>
+                <input id="date" type="date" required aria-label="Date" />
               </div>
             </div>
             <div class="field">
-              <label for="title">Title</label>
-              <input id="title" required />
+              <label for="title" class="glyph-label"><svg class="icon" aria-hidden="true"><use href="#icon-title"/></svg></label>
+              <input id="title" required aria-label="Title" />
             </div>
             <div class="field">
-              <label for="summary">Summary</label>
-              <input id="summary" required />
+              <label for="summary" class="glyph-label"><svg class="icon" aria-hidden="true"><use href="#icon-summary"/></svg></label>
+              <input id="summary" required aria-label="Summary" />
             </div>
             <div class="row field">
               <div class="field">
-                <label for="tags">Tags (comma separated)</label>
-                <input id="tags" />
+                <label for="tags" class="glyph-label"><svg class="icon" aria-hidden="true"><use href="#icon-tags"/></svg></label>
+                <input id="tags" aria-label="Tags" />
               </div>
               <div class="field">
-                <label for="cover">Cover image (./name.png)</label>
-                <input id="cover" />
+                <label for="cover" class="glyph-label"><svg class="icon" aria-hidden="true"><use href="#icon-cover"/></svg></label>
+                <input id="cover" aria-label="Cover image" />
               </div>
             </div>
             <div class="field">
-              <label for="body">Markdown</label>
-              <textarea id="body" required></textarea>
+              <label for="body" class="glyph-label"><svg class="icon" aria-hidden="true"><use href="#icon-md"/></svg></label>
+              <textarea id="body" required aria-label="Markdown body"></textarea>
             </div>
             <div class="actions">
-              <button class="primary" type="submit" id="save">Save &amp; publish</button>
-              <label class="checkbox" for="draft">
+              <button class="primary btn-icon" type="submit" id="save" aria-label="Save and publish"><svg class="icon" aria-hidden="true"><use href="#icon-save"/></svg></button>
+              <label class="checkbox btn-icon" for="draft" aria-label="Draft mode">
                 <input id="draft" type="checkbox" />
-                Draft
+                <svg class="icon" aria-hidden="true"><use href="#icon-draft"/></svg>
               </label>
               <input id="image-input" type="file" accept="image/*" hidden />
-              <button type="button" id="upload">Add image</button>
-              <button type="button" id="delete" class="danger">Delete post</button>
+              <button class="btn-icon" type="button" id="upload" aria-label="Add image"><svg class="icon" aria-hidden="true"><use href="#icon-upload"/></svg></button>
+              <button class="btn-icon danger" type="button" id="delete" aria-label="Delete post"><svg class="icon" aria-hidden="true"><use href="#icon-delete"/></svg></button>
             </div>
             <div class="images" id="images"></div>
           </form>

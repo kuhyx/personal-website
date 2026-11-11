@@ -61,6 +61,34 @@ interface UploadResponse {
 
 const FIELDS = ["slug", "date", "title", "summary", "tags", "cover", "body"] as const;
 
+/** How a status reads: done, failed, or still running. */
+type Tone = "ok" | "bad" | "busy";
+
+/** The `index.html` sprite symbol each tone shows. */
+const TONE_GLYPH: Record<Tone, string> = { ok: "ok", bad: "error", busy: "busy" };
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+/** A decorative `<svg class="icon">` drawing sprite symbol `#icon-<name>` from `index.html`. */
+function glyph(doc: Document, name: string): SVGSVGElement {
+  const svg = doc.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("class", `icon icon--${name}`);
+  svg.setAttribute("aria-hidden", "true");
+  const use = doc.createElementNS(SVG_NS, "use");
+  use.setAttribute("href", `#icon-${name}`);
+  svg.append(use);
+  return svg;
+}
+
+/** A glyph a reader hears as `label`: a `role="img"` span around it. */
+function labelledGlyph(doc: Document, name: string, label: string): HTMLSpanElement {
+  const span = doc.createElement("span");
+  span.setAttribute("role", "img");
+  span.setAttribute("aria-label", label);
+  span.append(glyph(doc, name));
+  return span;
+}
+
 function required(doc: Document, id: string): HTMLElement {
   const element = doc.getElementById(id);
   if (element === null) {
@@ -125,8 +153,20 @@ export async function mountEditor(ports: EditorPorts): Promise<void> {
   let posts: StoredPostJson[] = [];
   let current: string | null = null;
 
-  const say = (text: string, tone: "ok" | "bad" = "ok"): void => {
-    status.textContent = text;
+  /**
+   * Report a state as a glyph per tone, the sentence spoken-only (textgate:
+   * the editor paints no words of its own). `figure` is a number worth
+   * seeing, such as the publish time, painted next to the glyph.
+   */
+  const say = (text: string, tone: Tone = "ok", figure?: string): void => {
+    const spoken = doc.createElement("span");
+    spoken.className = "sr-only";
+    spoken.textContent = text;
+    const shown: Node[] = [glyph(doc, TONE_GLYPH[tone])];
+    if (figure !== undefined) {
+      shown.push(doc.createTextNode(figure));
+    }
+    status.replaceChildren(...shown, spoken);
     status.dataset.tone = tone;
   };
 
@@ -179,10 +219,10 @@ export async function mountEditor(ports: EditorPorts): Promise<void> {
 
   function renderImages(images: readonly string[]): void {
     if (images.length === 0) {
-      imageList.textContent = "No images yet.";
+      imageList.replaceChildren(labelledGlyph(doc, "images", "No images yet."));
       return;
     }
-    imageList.replaceChildren("Click to insert: ");
+    imageList.replaceChildren();
     for (const name of images) {
       const code = doc.createElement("code");
       code.textContent = name;
@@ -199,7 +239,10 @@ export async function mountEditor(ports: EditorPorts): Promise<void> {
         button.type = "button";
         button.setAttribute("aria-current", String(post.slug === current));
         const label = doc.createElement("span");
-        label.textContent = post.meta.draft ? `${post.meta.title} (draft)` : post.meta.title;
+        label.textContent = post.meta.title;
+        if (post.meta.draft) {
+          label.append(" ", labelledGlyph(doc, "draft", "draft"));
+        }
         const when = doc.createElement("small");
         when.textContent = post.meta.date;
         button.append(label, when);
@@ -277,7 +320,7 @@ export async function mountEditor(ports: EditorPorts): Promise<void> {
     guard(async () => {
       const name = slug.value.trim();
       save.disabled = true;
-      say("Saving and rebuilding…");
+      say("Saving and rebuilding…", "busy");
       try {
         const result = await api<SaveResponse>(`/api/posts/${encodeURIComponent(name)}`, {
           method: "PUT",
@@ -297,7 +340,8 @@ export async function mountEditor(ports: EditorPorts): Promise<void> {
         current = name;
         slug.disabled = true;
         await refresh();
-        say(`Saved and published in ${(result.durationMs / 1000).toFixed(1)}s.`);
+        const seconds = `${(result.durationMs / 1000).toFixed(1)}s`;
+        say(`Saved and published in ${seconds}.`, "ok", seconds);
       } finally {
         save.disabled = false;
       }

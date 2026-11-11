@@ -63,7 +63,7 @@ const el = (id: string): HTMLElement => {
   return found;
 };
 const input = (id: string): HTMLInputElement => el(id) as HTMLInputElement;
-const status = (): string => el("status").textContent;
+const status = (): string => el("status").querySelector(".sr-only")?.textContent ?? "";
 const today = (): string => "2026-08-29";
 const postButton = (): HTMLButtonElement => {
   const button = el("post-list").querySelector("button");
@@ -133,7 +133,9 @@ describe("mounting", () => {
   it("marks a draft in the list and dates every entry", async () => {
     const { fetch } = stubFetch([listing([POST, DRAFT])]);
     await mountEditor({ doc: document, fetch, today });
-    expect(el("post-list").textContent).toContain("Hello (draft)".replace("Hello", DRAFT.meta.title));
+    const [published, draft] = [...el("post-list").querySelectorAll("li")];
+    expect(published?.querySelector('[role="img"][aria-label="draft"]')).toBeNull();
+    expect(draft?.querySelector('[role="img"][aria-label="draft"] use')?.getAttribute("href")).toBe("#icon-draft");
     expect(el("post-list").textContent).toContain("2026-08-20");
   });
 
@@ -144,7 +146,9 @@ describe("mounting", () => {
     expect(input("draft").checked).toBe(true);
     expect(input("slug").disabled).toBe(false);
     expect(el("delete").hidden).toBe(true);
-    expect(el("images").textContent).toBe("No images yet.");
+    const imgList = el("images");
+    expect(imgList.querySelector('[role="img"]')?.getAttribute("aria-label")).toBe("No images yet.");
+    expect(imgList.querySelector("use")?.getAttribute("href")).toBe("#icon-images");
   });
 });
 
@@ -315,6 +319,9 @@ describe("saving", () => {
       body: "Prose.",
     });
     expect(status()).toBe("Saved and published in 1.5s.");
+    expect(el("status").dataset.tone).toBe("ok");
+    expect(el("status").querySelector("use")?.getAttribute("href")).toBe("#icon-ok");
+    expect(el("status").firstChild?.nextSibling?.textContent).toBe("1.5s");
     expect(input("slug").disabled).toBe(true);
     expect((el("save") as HTMLButtonElement).disabled).toBe(false);
   });

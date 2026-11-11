@@ -1,0 +1,12 @@
+---
+/** One decorative glyph from `lib/icons.ts`; the element around it carries the spoken label. */
+import { iconPath, type IconName } from "../lib/icons";
+
+interface Props {
+  readonly name: IconName;
+}
+
+const { name } = Astro.props;
+---
+
+<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d={iconPath(name)}></path></svg>

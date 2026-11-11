@@ -64,20 +64,18 @@ describe("computeDuration", () => {
 
 describe("formatDuration", () => {
   it("renders years and months", () => {
-    expect(formatDuration({ years: 2, months: 1 })).toBe(
-      "2 years and 1 month",
-    );
+    expect(formatDuration({ years: 2, months: 1 })).toBe("2y 1m");
   });
 
-  it("renders singular units", () => {
-    expect(formatDuration({ years: 1, months: 0 })).toBe("1 year");
+  it("drops an empty month part", () => {
+    expect(formatDuration({ years: 1, months: 0 })).toBe("1y");
   });
 
   it("renders months only", () => {
-    expect(formatDuration({ years: 0, months: 3 })).toBe("3 months");
+    expect(formatDuration({ years: 0, months: 3 })).toBe("3m");
   });
 
-  it("renders a zero duration as less than a month", () => {
-    expect(formatDuration({ years: 0, months: 0 })).toBe("less than a month");
+  it("renders a zero duration as under one month", () => {
+    expect(formatDuration({ years: 0, months: 0 })).toBe("<1m");
   });
 });

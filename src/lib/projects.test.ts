@@ -1,6 +1,7 @@
 import { getByRole, getByText, queryByRole } from "@testing-library/dom";
 import { GithubError, type Project } from "./github";
 import { errorMessage, formatMonthYear, mountProjects, projectCard } from "./projects";
+import { visibleWords } from "../test/visible-words";
 
 const base: Project = {
   name: "screen-locker",
@@ -14,7 +15,7 @@ const base: Project = {
 };
 
 function container(): HTMLElement {
-  document.body.innerHTML = "<div data-projects><p>Loading projects…</p></div>";
+  document.body.innerHTML = '<div data-projects aria-busy="true"><span class="spinner" role="progressbar" aria-label="Loading projects"></span></div>';
   const node = document.querySelector<HTMLElement>("[data-projects]");
   if (node === null) {
     throw new Error("fixture missing");
@@ -33,8 +34,10 @@ describe("projectCard", () => {
     expect(getByText(card, "Locks the screen for workouts.")).toBeInstanceOf(HTMLElement);
     expect(card.querySelector(".project-card__langs")?.textContent).toBe("PythonShellDart");
     expect(card.querySelector(".project-card__topics")?.textContent).toBe("pythonlinux");
-    expect(getByText(card, "Jun 2026")).toBeInstanceOf(HTMLElement);
+    expect(getByText(card, "2026-06")).toBeInstanceOf(HTMLElement);
+    expect(card.querySelector('dt[aria-label="Updated"] svg.icon')).not.toBeNull();
     expect(getByRole(card, "link", { name: "Live site" })).toHaveAttribute("href", base.homepage);
+    expect(getByRole(card, "link", { name: "Live site" }).querySelector("svg.icon")).not.toBeNull();
   });
 
   it("omits the optional parts when absent", () => {
@@ -63,19 +66,22 @@ describe("mountProjects", () => {
     const node = container();
     await mountProjects(node, () => Promise.resolve([base, { ...base, name: "other" }]));
     expect(node.querySelector(".projects__grid")?.children).toHaveLength(2);
-    expect(node.textContent).not.toContain("Loading");
+    expect(node.querySelector(".spinner")).toBeNull();
+    expect(node).not.toHaveAttribute("aria-busy");
   });
 
-  it("says so when there is nothing to show", async () => {
+  it("shows the empty glyph when there is nothing to show", async () => {
     const node = container();
     await mountProjects(node, () => Promise.resolve([]));
-    expect(node.textContent).toBe("No projects to show.");
+    expect(node.querySelector(".projects__state")).toHaveAttribute("aria-label", "No projects to show.");
+    expect(node).not.toHaveAttribute("aria-busy");
   });
 
   it("shows the failure as an alert", async () => {
     const node = container();
     await mountProjects(node, () => Promise.reject(new GithubError("rate-limit", "GitHub rate limit hit.")));
-    expect(getByRole(node, "alert")).toHaveTextContent("GitHub rate limit hit.");
+    expect(getByRole(node, "alert")).toHaveAttribute("aria-label", "GitHub rate limit hit.");
+    expect(getByRole(node, "alert").querySelector("svg.icon")).not.toBeNull();
   });
 
   it("fetches from GitHub by default", async () => {
@@ -84,7 +90,7 @@ describe("mountProjects", () => {
     const node = container();
     await mountProjects(node);
     expect(fetchMock).toHaveBeenCalled();
-    expect(getByRole(node, "alert")).toHaveTextContent("Could not reach GitHub.");
+    expect(getByRole(node, "alert")).toHaveAttribute("aria-label", "Could not reach GitHub.");
     vi.unstubAllGlobals();
   });
 });
@@ -95,7 +101,25 @@ describe("errorMessage / formatMonthYear", () => {
     expect(errorMessage("nope")).toBe("Could not load projects.");
   });
 
-  it("formats an ISO timestamp as a short month and year", () => {
-    expect(formatMonthYear("2026-01-20T10:00:00Z")).toBe("Jan 2026");
+  it("formats an ISO timestamp as a numeric year and month", () => {
+    expect(formatMonthYear("2026-01-20T10:00:00Z")).toBe("2026-01");
+  });
+});
+
+describe("text-free (textgate)", () => {
+  const content = [base.name, base.description ?? "", ...base.languages, ...base.topics];
+
+  it("a card paints only the repo's own fields", () => {
+    expect(visibleWords(projectCard(document, base), content)).toEqual([]);
+  });
+
+  it("the empty, error and loading states paint no words", async () => {
+    const empty = container();
+    expect(visibleWords(empty, [])).toEqual([]);
+    await mountProjects(empty, () => Promise.resolve([]));
+    expect(visibleWords(empty, [])).toEqual([]);
+    const failed = container();
+    await mountProjects(failed, () => Promise.reject(new GithubError("network", "Could not reach GitHub.")));
+    expect(visibleWords(failed, [])).toEqual([]);
   });
 });

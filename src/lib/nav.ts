@@ -1,9 +1,15 @@
+import type { IconName } from "./icons";
+
 /** The two top-level sections the site nav links to. */
 export type NavItem = "/" | "/blog";
 
-/** One nav link: where it goes, its label, and whether it is the current section. */
+/**
+ * One nav link: where it goes, its glyph, its spoken-only label (textgate: the
+ * nav paints no words), and whether it is the current section.
+ */
 export interface NavLink {
   readonly href: NavItem;
+  readonly icon: IconName;
   readonly label: string;
   readonly current: boolean;
 }
@@ -17,7 +23,7 @@ export interface NavLink {
  */
 export function navLinks(current: NavItem | null): NavLink[] {
   return [
-    { href: "/", label: "Home", current: current === "/" },
-    { href: "/blog", label: "Blog", current: current === "/blog" },
+    { href: "/", icon: "home", label: "Home", current: current === "/" },
+    { href: "/blog", icon: "blog", label: "Blog", current: current === "/blog" },
   ];
 }

@@ -1,14 +1,16 @@
 ---
 /**
- * The projects showcase. Ships as "Loading projects…"; the script below
- * replaces that with one live fetch of the public GitHub repos.
+ * The projects showcase. Ships as a spinner; the script below replaces it
+ * with one live fetch of the public GitHub repos. textgate: the heading and
+ * every state are glyphs with spoken-only labels.
  */
+import Icon from "./icon.astro";
 ---
 
 <section class="projects" aria-labelledby="projects-heading">
-  <h2 id="projects-heading">Projects</h2>
-  <div class="projects__body" data-projects>
-    <p>Loading projects…</p>
+  <h2 id="projects-heading" aria-label="Projects"><Icon name="projects" /></h2>
+  <div class="projects__body" data-projects aria-busy="true">
+    <span class="spinner" role="progressbar" aria-label="Loading projects"></span>
   </div>
 </section>
 

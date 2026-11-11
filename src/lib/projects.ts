@@ -1,23 +1,24 @@
 /**
  * The projects showcase, rendered in the browser from one live GitHub fetch.
  *
- * The static page ships the section with a "Loading projects…" line; this
- * module replaces it with the cards, the error message or the empty notice.
- * Built with DOM calls and `textContent` only, never `innerHTML`: every
- * string here comes from GitHub, so none of it is ever parsed as markup.
+ * The static page ships the section with a spinner; this module replaces it
+ * with the cards, the error glyph or the empty glyph. Built with DOM calls and
+ * `textContent` only, never `innerHTML`: every string here comes from GitHub,
+ * so none of it is ever parsed as markup.
+ *
+ * textgate: the only words painted are the repo's own (name, description,
+ * languages, topics). Labels and error messages are spoken-only.
  */
 
 import { fetchRepos, type Project } from "./github";
+import { iconElement, type IconName } from "./icons";
 
 /** How many languages a card lists before it stops. */
 const MAX_LANGUAGES = 6;
 
-/** Format an ISO timestamp as e.g. `Jun 2026`. */
+/** Format an ISO timestamp as e.g. `2026-06`: numbers, no month names. */
 export function formatMonthYear(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-  });
+  return new Date(iso).toISOString().slice(0, 7);
 }
 
 /** Extract a human message from an unknown rejection. */
@@ -49,6 +50,14 @@ function externalLink(doc: Document, href: string, text: string, className?: str
   return link;
 }
 
+/** A `p` holding only `icon`, spoken as `label` (the empty and error states). */
+function glyphLine(doc: Document, icon: IconName, label: string, className: string): HTMLParagraphElement {
+  const line = element(doc, "p", undefined, className);
+  line.setAttribute("aria-label", label);
+  line.append(iconElement(doc, icon));
+  return line;
+}
+
 function list(doc: Document, className: string, items: readonly string[]): HTMLUListElement {
   const ul = element(doc, "ul", undefined, className);
   ul.append(...items.map((item) => element(doc, "li", item)));
@@ -69,23 +78,30 @@ export function projectCard(doc: Document, project: Project): HTMLElement {
   }
   const meta = element(doc, "dl", undefined, "project-card__meta");
   const updated = element(doc, "div");
-  updated.append(element(doc, "dt", "Updated"), element(doc, "dd", formatMonthYear(project.pushedAt)));
+  const term = element(doc, "dt");
+  term.setAttribute("aria-label", "Updated");
+  term.append(iconElement(doc, "updated"));
+  updated.append(term, element(doc, "dd", formatMonthYear(project.pushedAt)));
   meta.append(updated);
   card.append(meta);
   if (project.topics.length > 0) {
     card.append(list(doc, "project-card__topics", project.topics));
   }
   if (project.homepage !== null) {
-    card.append(externalLink(doc, project.homepage, "Live site", "project-card__homepage"));
+    const live = externalLink(doc, project.homepage, "", "project-card__homepage");
+    live.setAttribute("aria-label", "Live site");
+    live.append(iconElement(doc, "external"));
+    card.append(live);
   }
   return card;
 }
 
-/** Replace `container`'s contents with the cards, or the empty notice. */
+/** Replace `container`'s contents with the cards, or the empty glyph. */
 export function renderProjects(container: HTMLElement, projects: readonly Project[]): void {
   const doc = container.ownerDocument;
+  container.removeAttribute("aria-busy");
   if (projects.length === 0) {
-    container.replaceChildren(element(doc, "p", "No projects to show."));
+    container.replaceChildren(glyphLine(doc, "empty", "No projects to show.", "projects__state"));
     return;
   }
   const grid = element(doc, "div", undefined, "projects__grid");
@@ -93,10 +109,11 @@ export function renderProjects(container: HTMLElement, projects: readonly Projec
   container.replaceChildren(grid);
 }
 
-/** Replace `container`'s contents with an alert carrying `message`. */
+/** Replace `container`'s contents with an alert glyph that speaks `message`. */
 export function renderError(container: HTMLElement, message: string): void {
-  const alert = element(container.ownerDocument, "p", message);
+  const alert = glyphLine(container.ownerDocument, "error", message, "projects__state projects__state--error");
   alert.setAttribute("role", "alert");
+  container.removeAttribute("aria-busy");
   container.replaceChildren(alert);
 }
 
