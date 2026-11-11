@@ -8,15 +8,25 @@
 # stack, then health-check what is actually being served.
 #
 # Usage:
-#   scripts/deploy.sh           Pull, install/build/restart, health-check.
+#   scripts/deploy.sh           Pull, then full or fast deploy, health-check.
+#   scripts/deploy.sh --full    Pull, always run the full installer.
 #   scripts/deploy.sh --check   Health-check only (no pull, no build).
 #
-# Idempotent: rerunning pulls nothing new, rebuilds the same dist/ and
-# recreates the same container. Exits non-zero if any step or check fails.
+# Full vs fast: the full installer (pnpm install, astro build, gitea/caddy/
+# firewall, admin unit) takes minutes on a loaded host. After it passes, the
+# deployed commit + installer hash go into a stamp. While both still match,
+# a rerun takes the fast path: recreate the container (`setup serve`) and
+# start the admin unit if it is down. Any failed run deletes the stamp, so
+# the next run is full again.
 #
-# Overridable for testing the checks themselves (defaults are the live ones):
-#   PW_DEPLOY_SRC, PW_DEPLOY_SETUP, PW_DEPLOY_LOCAL_URL, PW_DEPLOY_PUBLIC_URL,
-#   PW_DEPLOY_ADMIN_URL
+# Every run appends "<time> mode=<m> head=<sha> exit=<n>" to
+# $STATE/deploy.log, so the outcome survives a killed caller.
+#
+# Idempotent. Exits non-zero if any step or check fails.
+#
+# Overridable for testing (defaults are the live ones):
+#   PW_DEPLOY_SRC, PW_DEPLOY_SETUP, PW_DEPLOY_STATE, PW_DEPLOY_LOCAL_URL,
+#   PW_DEPLOY_PUBLIC_URL, PW_DEPLOY_ADMIN_URL
 
 set -euo pipefail
 
@@ -25,6 +35,9 @@ readonly SETUP="${PW_DEPLOY_SETUP:-${HOME}/src/testsAndMisc/linux_configuration/
 readonly LOCAL_URL="${PW_DEPLOY_LOCAL_URL:-http://127.0.0.1:8088}"
 readonly PUBLIC_URL="${PW_DEPLOY_PUBLIC_URL:-https://kuhy.duckdns.org}"
 readonly ADMIN_URL="${PW_DEPLOY_ADMIN_URL:-http://127.0.0.1:4321/admin}"
+readonly STATE="${PW_DEPLOY_STATE:-${XDG_STATE_HOME:-${HOME}/.local/state}/personal-website-deploy}"
+readonly STAMP="${STATE}/deployed"
+readonly RECORD="${STATE}/deploy.log"
 readonly CONTAINER="personal-website"
 readonly ADMIN_UNIT="personal-website-admin.service"
 
@@ -90,18 +103,58 @@ health_check() {
 	printf 'deploy: all health checks passed.\n'
 }
 
-main() {
-	case "${1:-}" in
-	--check) ;;
-	"")
-		[[ -d "$SRC/.git" ]] || die "No checkout at ${SRC}."
-		[[ -x "$SETUP" ]] || die "Installer not found: ${SETUP}."
-		git -C "$SRC" pull --ff-only
+# What a deploy depends on: the checkout's commit and the installer code.
+# The installer's lib/ files are hashed too, since most of it lives there.
+deploy_fingerprint() {
+	local lib="${SETUP%/*}/lib"
+	printf '%s %s\n' "$(git -C "$SRC" rev-parse HEAD)" \
+		"$(cat "$SETUP" "$lib"/website_*.sh "$lib"/static_site_caddy.sh 2>/dev/null | sha256sum | cut -d' ' -f1)"
+}
+
+MODE="check"
+
+# EXIT trap: append the outcome, and drop the stamp on failure so a broken
+# deploy is never skipped by the fast path.
+record_result() {
+	local rc=$?
+	mkdir -p "$STATE"
+	if ((rc != 0)); then rm -f -- "$STAMP"; fi
+	printf '%s mode=%s head=%s exit=%d\n' "$(date -Is)" "$MODE" \
+		"$(git -C "$SRC" rev-parse --short HEAD 2>/dev/null || echo none)" "$rc" >>"$RECORD"
+	printf 'deploy: mode=%s exit=%d\n' "$MODE" "$rc"
+}
+
+ensure_admin_running() {
+	admin_active || sudo -n systemctl restart "$ADMIN_UNIT"
+}
+
+deploy() {
+	[[ -d "$SRC/.git" ]] || die "No checkout at ${SRC}."
+	[[ -x "$SETUP" ]] || die "Installer not found: ${SETUP}."
+	git -C "$SRC" pull --ff-only
+	local want
+	want="$(deploy_fingerprint)"
+	if [[ "$1" != "--full" && -f "$STAMP" && "$(cat "$STAMP")" == "$want" ]]; then
+		MODE="fast"
+		bash "$SETUP" serve
+		ensure_admin_running
+	else
+		MODE="full"
+		rm -f -- "$STAMP"
 		bash "$SETUP" setup
-		;;
-	*) die "Unknown argument: $1 (use --check or nothing)." ;;
-	esac
+	fi
 	health_check
+	mkdir -p "$STATE"
+	printf '%s\n' "$want" >"$STAMP"
+}
+
+main() {
+	trap record_result EXIT
+	case "${1:-}" in
+	--check) health_check ;;
+	"" | --full) deploy "${1:-}" ;;
+	*) die "Unknown argument: $1 (use --full, --check or nothing)." ;;
+	esac
 }
 
 main "$@"
