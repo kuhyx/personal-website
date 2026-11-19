@@ -3,6 +3,9 @@
  * The page shell every route shares: `<head>` (title, description, OpenGraph,
  * canonical, discovery links, JSON-LD) from `lib/agent-head.ts`, the shared
  * design tokens, then the site nav above the page's own content.
+ *
+ * `/logo-switch.js` is the logo lab's switcher: a no-op without kuhy's stored
+ * pick, and static rather than bundled so no page's Astro bundle changes.
  */
 import "@kuhyx/web-ui/tokens.css";
 import "../styles/index.css";
@@ -30,6 +33,7 @@ const FAVICON =
     <meta name="build-id" content={import.meta.env.PUBLIC_BUILD_ID} />
     <link rel="icon" href={FAVICON} />
     <Fragment set:html={headFor(path)} />
+    <script is:inline type="module" src="/logo-switch.js"></script>
   </head>
   <body>
     <main class="page">

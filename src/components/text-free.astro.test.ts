@@ -5,6 +5,8 @@ import { cv } from "../data/cv";
 import NotFoundPage from "../pages/404.astro";
 import BlogPage from "../pages/blog/index.astro";
 import IndexPage from "../pages/index.astro";
+import LogoLabPage from "../pages/logo-lab.astro";
+import { CANDIDATES } from "../lib/logo-lab";
 import { publishedPosts } from "../lib/posts";
 import { first } from "../test/first";
 import { stringsIn, visibleWords } from "../test/visible-words";
@@ -49,6 +51,10 @@ describe("text-free pages", () => {
 
   it("a post page paints only the post", async () => {
     expect(await words(PostPage, [...POST_CONTENT, "Body"], { meta: POST.meta }, { default: "<p>Body</p>" })).toEqual([]);
+  });
+
+  it("the logo lab paints only the candidate ids", async () => {
+    expect(await words(LogoLabPage, CANDIDATES.map((c) => c.label))).toEqual([]);
   });
 
   it("the 404 page paints no words", async () => {

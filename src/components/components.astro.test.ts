@@ -5,6 +5,8 @@ import BaseLayout from "../layouts/base.astro";
 import NotFoundPage from "../pages/404.astro";
 import BlogPage from "../pages/blog/index.astro";
 import IndexPage from "../pages/index.astro";
+import LogoLabPage from "../pages/logo-lab.astro";
+import { CANDIDATES } from "../lib/logo-lab";
 import { NOT_FOUND_ROUTE } from "../lib/agent-head";
 import type { PostMeta } from "../lib/frontmatter";
 import { publishedPosts } from "../lib/posts";
@@ -186,5 +188,31 @@ describe("pages", () => {
     expect(html).not.toContain("aria-current");
     expect(await render(NotFound)).toContain('<a href="/blog" aria-label="Read the blog"><svg');
     expect(NOT_FOUND_ROUTE).toBe("/404");
+  });
+});
+
+describe("logo lab", () => {
+  it("shows every candidate's mark, favicons and og card on light and dark", async () => {
+    const html = await render(LogoLabPage);
+    expect(html).toContain('<meta name="robots" content="noindex" />');
+    for (const { id, label } of CANDIDATES) {
+      expect(html).toContain(`>${label}</h2>`);
+      expect(html).toContain(`data-logo="${id}"`);
+      for (const scheme of ["light", "dark"]) {
+        const swatch = html.split(`data-swatch="${id}-${scheme}"`)[1]?.split("</div>")[0] ?? "";
+        expect(swatch).toContain(`src="/logo-lab/${id}/logo.svg"`);
+        expect(swatch).toContain(`src="/logo-lab/${id}/16.png" width="16" height="16"`);
+        expect(swatch).toContain(`src="/logo-lab/${id}/32.png" width="32" height="32"`);
+        expect(swatch).toContain(`src="/logo-lab/${id}/og.png" width="1200" height="630"`);
+      }
+    }
+    expect(html).toContain("data-logo-reset");
+  });
+});
+
+describe("base layout", () => {
+  it("loads the logo switcher as a same-origin module on every page", async () => {
+    const html = await render(IndexPage);
+    expect(html).toContain('<script type="module" src="/logo-switch.js"></script>');
   });
 });

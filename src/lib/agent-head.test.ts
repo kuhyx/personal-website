@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { NOT_FOUND_ROUTE, headFor } from "./agent-head";
+import { LOGO_LAB_ROUTE } from "./logo-lab";
 import { prerenderRoutes } from "./head";
 import { SITE_TITLE } from "./site";
 
@@ -54,5 +55,28 @@ describe("headFor(NOT_FOUND_ROUTE)", () => {
 
   it("still links the catalog, like every other page", () => {
     expect(head).toContain(CATALOG_LINK);
+  });
+});
+
+describe("headFor(LOGO_LAB_ROUTE)", () => {
+  const head = headFor(LOGO_LAB_ROUTE);
+
+  it("is kept out of the index", () => {
+    expect(head).toContain(`<title>${SITE_TITLE}</title>`);
+    expect(head).toContain('<meta name="robots" content="noindex" />');
+  });
+
+  it("claims no canonical, card, mirror or JSON-LD of the home page", () => {
+    for (const absent of ["canonical", "og:", "twitter:", "text/markdown", "ld+json"]) {
+      expect(head).not.toContain(absent);
+    }
+  });
+
+  it("still links the catalog, like every other page", () => {
+    expect(head).toContain(CATALOG_LINK);
+  });
+
+  it("is not a prerendered route, so no sitemap, catalog or mirror lists it", () => {
+    expect(prerenderRoutes()).not.toContain(LOGO_LAB_ROUTE);
   });
 });

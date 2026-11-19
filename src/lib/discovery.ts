@@ -9,6 +9,7 @@
  */
 
 import { escapeHtml } from "./head";
+import { LOGO_LAB_ROUTE } from "./logo-lab";
 import { mirrorPath, postListItem } from "./mirror";
 import type { Post } from "./posts";
 import { SITE_DESCRIPTION, SITE_ORIGIN, SITE_TITLE, absoluteUrl } from "./site";
@@ -20,10 +21,14 @@ import { SITE_DESCRIPTION, SITE_ORIGIN, SITE_TITLE, absoluteUrl } from "./site";
  */
 const NAMED_AGENTS = ["GPTBot", "ClaudeBot", "CCBot", "Google-Extended"];
 
-/** `robots.txt`: every agent may fetch everything; the sitemap is linked. */
+/**
+ * `robots.txt`: every agent may fetch everything but the private logo lab;
+ * the sitemap is linked. Each group repeats the Disallow because a bot that
+ * matches a named group ignores `*`.
+ */
 export function robotsTxt(): string {
   const groups = ["*", ...NAMED_AGENTS].map(
-    (agent) => `User-agent: ${agent}\nAllow: /\n`,
+    (agent) => `User-agent: ${agent}\nAllow: /\nDisallow: ${LOGO_LAB_ROUTE}\n`,
   );
   return `${groups.join("\n")}\nSitemap: ${absoluteUrl("/sitemap.xml")}\n`;
 }

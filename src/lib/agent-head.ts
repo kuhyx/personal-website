@@ -10,6 +10,7 @@
 
 import { escapeHtml, metaForPath, renderHead } from "./head";
 import { jsonLdFor, jsonLdScript } from "./jsonld";
+import { LOGO_LAB_ROUTE } from "./logo-lab";
 import { mirrorPath } from "./mirror";
 import { SITE_TITLE } from "./site";
 
@@ -35,10 +36,26 @@ function notFoundHead(): string {
   ].join(SEPARATOR);
 }
 
-/** The `<head>` block for one prerendered route, or for `NOT_FOUND_ROUTE`. */
+/**
+ * `/logo-lab` is a private preview: kept out of the index, and claiming none of
+ * the home page's canonical, card, mirror or JSON-LD that `metaForPath` would
+ * fall back to.
+ */
+function logoLabHead(): string {
+  return [
+    `<title>${escapeHtml(SITE_TITLE)}</title>`,
+    '<meta name="robots" content="noindex" />',
+    ...DISCOVERY_LINKS,
+  ].join(SEPARATOR);
+}
+
+/** The `<head>` block for one prerendered route, `NOT_FOUND_ROUTE` or the logo lab. */
 export function headFor(path: string): string {
   if (path === NOT_FOUND_ROUTE) {
     return notFoundHead();
+  }
+  if (path === LOGO_LAB_ROUTE) {
+    return logoLabHead();
   }
   const meta = metaForPath(path);
   return [
