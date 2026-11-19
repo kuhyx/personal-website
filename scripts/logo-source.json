@@ -1,0 +1,13 @@
+{
+  "repo": "https://github.com/kuhyx/utils.git",
+  "sha": "7eff63a3c4ccce3338c32bdd3f62509d8bfc597f",
+  "dir": "unified-design-system/logo",
+  "candidates": [
+    { "id": "a", "label": "A", "name": "grid-kuhy", "file": "a-grid-kuhy.svg" },
+    { "id": "b", "label": "B", "name": "k-solo", "file": "b-k.svg" },
+    { "id": "c", "label": "C", "name": "wordmark", "file": "c-kuhy-wordmark.svg" },
+    { "id": "d", "label": "D", "name": "ky-ligature", "file": "d-ky-ligature.svg" },
+    { "id": "e", "label": "E", "name": "glyph", "file": "e-glyph.svg" },
+    { "id": "f", "label": "F", "name": "kr-initials", "file": "f-kr.svg" }
+  ]
+}
