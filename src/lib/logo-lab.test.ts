@@ -29,16 +29,11 @@ function committed(id: string, file: string): Buffer {
 }
 
 describe("logo candidates", () => {
-  it("are A to F with fixed ids", () => {
-    expect(CANDIDATES.map((c) => c.label)).toEqual(["A", "B", "C", "D", "E", "F"]);
-    expect(CANDIDATES.map((c) => c.name)).toEqual([
-      "grid-kuhy",
-      "k-solo",
-      "wordmark",
-      "ky-ligature",
-      "glyph",
-      "kr-initials",
-    ]);
+  it("are three variants of each of A to F, with fixed ids", () => {
+    const kinds = ["A", "B", "C", "D", "E", "F"];
+    expect(CANDIDATES.map((c) => c.label)).toEqual(kinds.flatMap((k) => [`${k}1`, `${k}2`, `${k}3`]));
+    expect(CANDIDATES.map((c) => c.id)).toEqual(kinds.flatMap((k) => [1, 2, 3].map((n) => `${k.toLowerCase()}${n}`)));
+    expect(CANDIDATES.map((c) => c.file.slice(0, 2))).toEqual(CANDIDATES.map((c) => c.id));
   });
 
   it("pins a full commit SHA of kuhyx/utils", () => {

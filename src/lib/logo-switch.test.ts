@@ -12,8 +12,8 @@ function page(): Document {
   const doc = document.implementation.createHTMLDocument("t");
   doc.head.innerHTML = `<link rel="icon" href="${FAVICON}" />`;
   doc.body.innerHTML = `<nav class="site-nav"><a href="/">h</a><a href="/blog">b</a></nav>
-    <button type="button" data-logo="c"><img alt="" /></button>
-    <button type="button" data-logo="e"></button>
+    <button type="button" data-logo="c2"><img alt="" /></button>
+    <button type="button" data-logo="e3"></button>
     <button type="button" data-logo-reset></button>`;
   return doc;
 }
@@ -56,26 +56,26 @@ describe("logo switcher", () => {
 
   it("puts the stored candidate first in the nav and as the favicon", () => {
     const doc = page();
-    localStorage.setItem("logo-lab:pick", "c");
+    localStorage.setItem("logo-lab:pick", "c2");
     applyPick(doc, localStorage);
     const mark = doc.querySelector(".site-nav")?.firstElementChild;
     expect(mark?.tagName).toBe("IMG");
-    expect(mark?.getAttribute("src")).toBe("/logo-lab/c/logo.svg");
+    expect(mark?.getAttribute("src")).toBe("/logo-lab/c2/logo.svg");
     expect(mark?.getAttribute("alt")).toBe("");
-    expect(icon(doc)).toBe("/logo-lab/c/32.png");
+    expect(icon(doc)).toBe("/logo-lab/c2/32.png");
   });
 
   it("switches on a tap, swaps on the next tap and resets to the current look", () => {
     const doc = page();
     wire(doc, localStorage);
-    click(doc, '[data-logo="c"] img');
-    expect(localStorage.getItem("logo-lab:pick")).toBe("c");
+    click(doc, '[data-logo="c2"] img');
+    expect(localStorage.getItem("logo-lab:pick")).toBe("c2");
     expect(doc.querySelectorAll("[data-logo-mark]")).toHaveLength(1);
 
-    click(doc, '[data-logo="e"]');
+    click(doc, '[data-logo="e3"]');
     expect(doc.querySelectorAll("[data-logo-mark]")).toHaveLength(1);
-    expect(doc.querySelector("[data-logo-mark]")?.getAttribute("src")).toBe("/logo-lab/e/logo.svg");
-    expect(icon(doc)).toBe("/logo-lab/e/32.png");
+    expect(doc.querySelector("[data-logo-mark]")?.getAttribute("src")).toBe("/logo-lab/e3/logo.svg");
+    expect(icon(doc)).toBe("/logo-lab/e3/32.png");
 
     click(doc, "[data-logo-reset]");
     expect(localStorage.getItem("logo-lab:pick")).toBeNull();
@@ -90,7 +90,7 @@ describe("logo switcher", () => {
     wire(doc, localStorage);
     click(doc, "p");
     expect(localStorage.getItem("logo-lab:pick")).toBeNull();
-    localStorage.setItem("logo-lab:pick", "b");
+    localStorage.setItem("logo-lab:pick", "b1");
     applyPick(doc, localStorage);
     expect(doc.body.innerHTML).toBe("<p>x</p>");
   });

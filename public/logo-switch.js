@@ -10,7 +10,7 @@
  */
 
 const PICK_KEY = "logo-lab:pick";
-const IDS = ["a", "b", "c", "d", "e", "f"];
+const IDS = ["a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3", "d1", "d2", "d3", "e1", "e2", "e3", "f1", "f2", "f3"];
 /** Same size as the nav's icons (`.site-nav .icon`, 1.75rem at 16 px). */
 const MARK_PX = 28;
 
