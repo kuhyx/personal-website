@@ -61,6 +61,12 @@ describe("vendored master", () => {
     expect(committed("logo.svg").toString("utf8")).toBe(readMaster(SOURCE ?? "", LOGO_SOURCE.sha, MASTER));
   });
 
+  // Against this repo itself, so the reading code is covered where there is no utils checkout (CI).
+  it("reads a file at a commit, from the first checkout that has it", () => {
+    expect(readMaster(ROOT, "HEAD", "package.json")).toContain('"name"');
+    expect(findSource([undefined, "/nonexistent", ROOT], "HEAD", "package.json")).toBe(ROOT);
+  });
+
   it("reads nothing from a missing checkout or commit", () => {
     expect(readMaster("/nonexistent", LOGO_SOURCE.sha, "x.svg")).toBeNull();
     expect(findSource([undefined, "/nonexistent"], LOGO_SOURCE.sha, "x.svg")).toBeNull();
