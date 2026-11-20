@@ -7,3 +7,13 @@ minimumReleaseAgeExclude:
   - "@astrojs/internal-helpers@0.13.1"
   - "@astrojs/markdown-satteri@0.4.7"
   - "@astrojs/markdown-remark@7.3.6"
+
+# @astrojs/astro2tsx 0.1.3 ships @emnapi/core 1.11.3 but lists the matching
+# @emnapi/runtime only as a devDependency, so pnpm fills its wasm runtime's
+# peer with the newest @emnapi/runtime in the tree. Once rolldown 1.3.3
+# brought 2.0.0-beta.2 in, `astro check` died with "this.bridge.setLastError
+# is not a function". Remove when astro2tsx declares the dependency itself.
+packageExtensions:
+  "@astrojs/astro2tsx@0.1.3":
+    dependencies:
+      "@emnapi/runtime": 1.11.3
