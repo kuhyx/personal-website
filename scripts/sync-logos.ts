@@ -1,13 +1,13 @@
 /**
- * sync-logos.ts — vendor the logo candidates from kuhyx/utils into
- * public/logo-lab/<id>/ and render their PNG exports and og card.
+ * sync-logos.ts — vendor the site's logo from kuhyx/utils into public/logo/
+ * and render its PNG exports and og card.
  *
- * The masters are read with `git show <sha>:<path>` at the commit pinned in
+ * The master is read with `git show <sha>:<path>` at the commit pinned in
  * scripts/logo-source.json, from the first checkout that has it: $UTILS_ROOT,
  * ~/src/utils, then a cached clone (~/.cache/personal-website/utils), which is
- * created or fetched when neither of the others has the commit. Writes, per
- * candidate: logo.svg (byte-for-byte the master), 16/32/64/180/512.png and
- * og.png (1200x630). src/lib/logo-lab.test.ts fails when any file drifts.
+ * created or fetched when neither of the others has the commit. Writes
+ * logo.svg (byte-for-byte the master), 16/32/64/180/512.png and og.png
+ * (1200x630). src/lib/logo.test.ts fails when any file drifts.
  *
  * Run: node scripts/sync-logos.ts   (Node strips the types itself.)
  * Exit 0 = every file written; non-zero = no checkout has the pinned commit.
@@ -17,7 +17,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-import { CANDIDATES, LOGO_SOURCE, PNG_SIZES, publicFile } from "../src/lib/logo-lab.ts";
+import { LOGO_SOURCE, PNG_SIZES, publicFile } from "../src/lib/logo.ts";
 import { findSource, readMaster, renderOg, renderPng } from "../src/lib/logo-render.ts";
 
 const ROOT = join(import.meta.dirname, "..");
@@ -48,20 +48,18 @@ function write(file: string, data: string | Buffer): void {
 }
 
 async function main(): Promise<void> {
-  const probe = (file: string): string => `${LOGO_SOURCE.dir}/${file}`;
-  const dir = source(probe(CANDIDATES[0]?.file ?? ""));
-  for (const { id, file } of CANDIDATES) {
-    const svg = readMaster(dir, LOGO_SOURCE.sha, probe(file));
-    if (svg === null) {
-      throw new Error(`sync-logos: ${probe(file)} missing at ${LOGO_SOURCE.sha}`);
-    }
-    write(publicFile(id, "logo.svg"), svg);
-    for (const size of PNG_SIZES) {
-      write(publicFile(id, `${size}.png`), await renderPng(svg, size));
-    }
-    write(publicFile(id, "og.png"), await renderOg(svg));
+  const master = `${LOGO_SOURCE.dir}/${LOGO_SOURCE.file}`;
+  const dir = source(master);
+  const svg = readMaster(dir, LOGO_SOURCE.sha, master);
+  if (svg === null) {
+    throw new Error(`sync-logos: ${master} missing at ${LOGO_SOURCE.sha}`);
   }
-  console.log(`sync-logos: ${CANDIDATES.length} candidates from ${dir} @ ${LOGO_SOURCE.sha.slice(0, 7)}`);
+  write(publicFile("logo.svg"), svg);
+  for (const size of PNG_SIZES) {
+    write(publicFile(`${size}.png`), await renderPng(svg, size));
+  }
+  write(publicFile("og.png"), await renderOg(svg));
+  console.log(`sync-logos: ${master} from ${dir} @ ${LOGO_SOURCE.sha.slice(0, 7)}`);
 }
 
 await main();

@@ -5,8 +5,6 @@ import BaseLayout from "../layouts/base.astro";
 import NotFoundPage from "../pages/404.astro";
 import BlogPage from "../pages/blog/index.astro";
 import IndexPage from "../pages/index.astro";
-import LogoLabPage from "../pages/logo-lab.astro";
-import { CANDIDATES } from "../lib/logo-lab";
 import { NOT_FOUND_ROUTE } from "../lib/agent-head";
 import type { PostMeta } from "../lib/frontmatter";
 import { publishedPosts } from "../lib/posts";
@@ -191,28 +189,26 @@ describe("pages", () => {
   });
 });
 
-describe("logo lab", () => {
-  it("shows every candidate's mark, favicons and og card on light and dark", async () => {
-    const html = await render(LogoLabPage);
-    expect(html).toContain('<meta name="robots" content="noindex" />');
-    for (const { id, label } of CANDIDATES) {
-      expect(html).toContain(`>${label}</h2>`);
-      expect(html).toContain(`data-logo="${id}"`);
-      for (const scheme of ["light", "dark"]) {
-        const swatch = html.split(`data-swatch="${id}-${scheme}"`)[1]?.split("</div>")[0] ?? "";
-        expect(swatch).toContain(`src="/logo-lab/${id}/logo.svg"`);
-        expect(swatch).toContain(`src="/logo-lab/${id}/16.png" width="16" height="16"`);
-        expect(swatch).toContain(`src="/logo-lab/${id}/32.png" width="32" height="32"`);
-        expect(swatch).toContain(`src="/logo-lab/${id}/og.png" width="1200" height="630"`);
-      }
+describe("the picked logo", () => {
+  it("is the favicon set of every page, with no switcher script left", async () => {
+    for (const page of [IndexPage, NotFoundPage]) {
+      const html = await render(page);
+      expect(html).toContain('<link rel="icon" type="image/svg+xml" href="/logo/logo.svg">');
+      expect(html).toContain('<link rel="icon" type="image/png" sizes="32x32" href="/logo/32.png">');
+      expect(html).toContain('<link rel="apple-touch-icon" href="/logo/180.png">');
+      expect(html).not.toContain("logo-switch");
+      expect(html).not.toContain("data:image/svg+xml");
     }
-    expect(html).toContain("data-logo-reset");
   });
-});
 
-describe("base layout", () => {
-  it("loads the logo switcher as a same-origin module on every page", async () => {
+  it("is the first thing in the nav, as a decorative mark", async () => {
+    const nav = (await render(IndexPage)).split('<nav class="site-nav"')[1]?.split("</nav>")[0] ?? "";
+    expect(nav).toMatch(/^[^<]*<img class="site-nav__mark" src="\/logo\/logo\.svg" width="28" height="28" alt="">/);
+  });
+
+  it("is the og:image of the home page", async () => {
     const html = await render(IndexPage);
-    expect(html).toContain('<script type="module" src="/logo-switch.js"></script>');
+    expect(html).toContain('<meta property="og:image" content="https://kuhy.duckdns.org/logo/og.png"');
+    expect(html).toContain('<meta name="twitter:card" content="summary_large_image"');
   });
 });

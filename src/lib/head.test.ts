@@ -49,7 +49,12 @@ describe("renderHead", () => {
     const html = renderHead(base);
     expect(html).toContain('content="website"');
     expect(html).not.toContain("article:published_time");
-    expect(html).toContain('content="summary"');
+  });
+
+  it("shares the logo card when the page has no image of its own", () => {
+    const html = renderHead(base);
+    expect(html).toContain(`og:image" content="${SITE_ORIGIN}/logo/og.png"`);
+    expect(html).toContain('content="summary_large_image"');
   });
 
   it("marks a dated page as an article", () => {
@@ -58,7 +63,7 @@ describe("renderHead", () => {
     expect(html).toContain('article:published_time" content="2026-08-29"');
   });
 
-  it("absolutises og:image and upgrades the card when there is one", () => {
+  it("absolutises the page's own og:image when there is one", () => {
     const html = renderHead({ ...base, image: "/assets/c.hash.png" });
     expect(html).toContain(`og:image" content="${SITE_ORIGIN}/assets/c.hash.png"`);
     expect(html).toContain('content="summary_large_image"');

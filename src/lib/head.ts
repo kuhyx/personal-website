@@ -9,6 +9,7 @@ import {
   SITE_TITLE,
   absoluteUrl,
 } from "./site";
+import { LOGO_OG } from "./logo";
 import { imageKey, publishedPosts, type Post } from "./posts";
 
 /** Everything a single page needs to describe itself to a scraper. */
@@ -17,7 +18,7 @@ export interface PageMeta {
   readonly description: string;
   /** Site-root-relative route, e.g. `/blog/hello-world`. */
   readonly path: string;
-  /** Site-root-relative image URL, or null for no card image. */
+  /** Site-root-relative URL of the page's own image, or null: its card then shows the logo. */
   readonly image: string | null;
   /** ISO date for `article:published_time`, or null for non-articles. */
   readonly publishedAt: string | null;
@@ -48,11 +49,10 @@ export function renderHead(meta: PageMeta): string {
     // Absolute on purpose: card scrapers do not resolve OG URLs against the
     // page they were found on, so a relative one is silently dropped.
     tag("property", "og:url", absoluteUrl(meta.path)),
-    tag("name", "twitter:card", meta.image === null ? "summary" : "summary_large_image"),
+    tag("name", "twitter:card", "summary_large_image"),
+    // A page with no image of its own shares the logo card.
+    tag("property", "og:image", absoluteUrl(meta.image ?? LOGO_OG)),
   ];
-  if (meta.image !== null) {
-    lines.push(tag("property", "og:image", absoluteUrl(meta.image)));
-  }
   if (meta.publishedAt !== null) {
     lines.push(tag("property", "article:published_time", meta.publishedAt));
   }

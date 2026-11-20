@@ -13,9 +13,6 @@
     "moduleDetection": "force",
     "noEmit": true,
     "resolveJsonModule": true,
-    /* public/logo-switch.js is plain JS (served as-is); its JSDoc types it. */
-    "allowJs": true,
-    "checkJs": true,
 
     /* Linting */
     "strict": true,

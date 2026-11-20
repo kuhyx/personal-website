@@ -24,15 +24,8 @@ describe("robotsTxt", () => {
     for (const bot of ["GPTBot", "ClaudeBot", "CCBot", "Google-Extended"]) {
       expect(robots).toContain(`User-agent: ${bot}\nAllow: /`);
     }
-    const disallowed = robots.match(/^Disallow: .*$/gm) ?? [];
-    expect(new Set(disallowed)).toEqual(new Set(["Disallow: /logo-lab"]));
-  });
-
-  it("keeps the logo lab out of every group, named bots included", () => {
-    // A bot that matches a named group ignores `*`, so each group says it.
-    for (const bot of ["*", "GPTBot", "ClaudeBot", "CCBot", "Google-Extended"]) {
-      expect(robots).toContain(`User-agent: ${bot}\nAllow: /\nDisallow: /logo-lab\n`);
-    }
+    // Nothing is closed: the og card under /logo/ must stay fetchable by card scrapers.
+    expect(robots).not.toContain("Disallow");
   });
 
   it("points at the sitemap by absolute URL", () => {

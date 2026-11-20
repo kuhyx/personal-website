@@ -1,5 +1,6 @@
 ---
-/** Top-level navigation between the landing page and the blog. */
+/** Top-level navigation between the landing page and the blog, led by the logo. */
+import { LOGO_SVG } from "../lib/logo";
 import { navLinks, type NavItem } from "../lib/nav";
 import Icon from "./icon.astro";
 
@@ -11,6 +12,7 @@ const links = navLinks(Astro.props.current);
 ---
 
 <nav class="site-nav" aria-label="Site">
+  <img class="site-nav__mark" src={LOGO_SVG} width="28" height="28" alt="" />
   {
     links.map((link) => (
       <a

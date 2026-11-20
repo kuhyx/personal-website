@@ -1,5 +1,5 @@
 /**
- * Node-only half of the logo lab: read a master from a utils checkout at the
+ * Node-only half of the logo: read the master from a utils checkout at the
  * pinned commit, and render the PNG exports and the og card with sharp.
  * Used by `scripts/sync-logos.ts` to write the files and by the tests to
  * prove the committed files still match a fresh render.
@@ -7,12 +7,12 @@
 
 import { execFileSync } from "node:child_process";
 import sharp from "sharp";
-import { OG_SIZE } from "./logo-lab.ts";
+import { OG_SIZE } from "./logo.ts";
 
-/** The charcoal every master's field uses; the og card is filled with it. */
+/** The charcoal of the master's field; the og card is filled with it. */
 const INK = "#211D1B";
 
-/** The masters' viewBox edge, so a render at `size` px needs no resampling. */
+/** The master's viewBox edge, so a render at `size` px needs no resampling. */
 const MASTER = 512;
 
 /** How much of the og card's height the mark takes. */
