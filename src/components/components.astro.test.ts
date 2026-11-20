@@ -193,7 +193,7 @@ describe("the picked logo", () => {
   it("is the favicon set of every page, with no switcher script left", async () => {
     for (const page of [IndexPage, NotFoundPage]) {
       const html = await render(page);
-      expect(html).toContain('<link rel="icon" type="image/svg+xml" href="/logo/logo.svg">');
+      expect(html).toContain('<link rel="icon" type="image/svg+xml" href="/logo/favicon.svg">');
       expect(html).toContain('<link rel="icon" type="image/png" sizes="32x32" href="/logo/32.png">');
       expect(html).toContain('<link rel="apple-touch-icon" href="/logo/180.png">');
       expect(html).not.toContain("logo-switch");

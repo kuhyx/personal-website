@@ -1,6 +1,7 @@
 {
   "repo": "https://github.com/kuhyx/utils.git",
-  "sha": "2e397d1ed50815b7d3091e1a67acdac11af52a96",
+  "sha": "5a225c78075f5c251b1418545d4cce6a455dd402",
   "dir": "unified-design-system/logo/final",
-  "file": "kuhy.svg"
+  "file": "kuhy.svg",
+  "favicon": "kuhy-favicon.svg"
 }

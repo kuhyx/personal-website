@@ -10,7 +10,7 @@ import "@kuhyx/web-ui/tokens.css";
 import "../styles/index.css";
 import SiteNav from "../components/site-nav.astro";
 import { headFor } from "../lib/agent-head";
-import { LOGO_SVG, assetPath } from "../lib/logo";
+import { FAVICON_SVG, assetPath } from "../lib/logo";
 import type { NavItem } from "../lib/nav";
 
 interface Props {
@@ -29,7 +29,7 @@ const { path, current } = Astro.props;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="build-id" content={import.meta.env.PUBLIC_BUILD_ID} />
-    <link rel="icon" type="image/svg+xml" href={LOGO_SVG} />
+    <link rel="icon" type="image/svg+xml" href={FAVICON_SVG} />
     <link rel="icon" type="image/png" sizes="32x32" href={assetPath("32.png")} />
     <link rel="apple-touch-icon" href={assetPath("180.png")} />
     <Fragment set:html={headFor(path)} />
