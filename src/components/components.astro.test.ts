@@ -163,6 +163,7 @@ describe("pages", () => {
     expect(html).toContain("<title>Blog — Krzysztof Rudnicki</title>");
     expect(html).toContain('<link rel="alternate" type="text/markdown" href="/blog.md" />');
     expect(html).toContain('<main class="page"><nav class="site-nav"');
+    expect(html).toContain('<footer class="site-footer"><kuhy-credit placement="above" align="end"');
     expect(html).toMatch(/<meta name="build-id" content="[0-9a-f]{7,}">/);
   });
 

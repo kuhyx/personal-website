@@ -698,3 +698,10 @@ h2 {
   gap: var(--space-4);
   font-size: 1.75rem;
 }
+
+/* The shared kuhy credit sits in the bottom-right corner of every page. */
+.site-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-block: var(--space-lg, 24px);
+}

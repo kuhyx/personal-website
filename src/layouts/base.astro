@@ -38,6 +38,12 @@ const { path, current } = Astro.props;
     <main class="page">
       <SiteNav current={current} />
       <slot />
+      <footer class="site-footer">
+        <kuhy-credit placement="above" align="end" style="--kuhy-credit-size:32px"></kuhy-credit>
+      </footer>
     </main>
+    <script>
+      import "@kuhyx/kuhy-credit";
+    </script>
   </body>
 </html>

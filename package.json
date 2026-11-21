@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@astrojs/markdown-remark": "7.3.10",
+    "@kuhyx/kuhy-credit": "github:kuhyx/utils#kuhy-credit-v0.3.0&path:/kuhy_credit/web",
     "@kuhyx/web-ui": "github:kuhyx/utils#web_ui-v0.5.0&path:/web_ui",
     "astro": "7.4.13",
     "highlight.js": "11.12.0",
