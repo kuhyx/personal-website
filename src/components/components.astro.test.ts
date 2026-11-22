@@ -43,12 +43,18 @@ const META: PostMeta = {
 describe("site nav", () => {
   it("marks Home current on the home page", async () => {
     const html = await render(SiteNav, { current: "/" });
-    expect(html).toContain('<a href="/" class="active" aria-current="page" aria-label="Home"><svg class="icon"');
-    expect(html).toContain('<a href="/blog" aria-label="Blog"><svg class="icon"');
+    expect(html).toContain('<a href="/" class="active" aria-current="page" aria-label="Home" title="Home"><svg class="icon"');
+    expect(html).toContain('<a href="/blog" aria-label="Blog" title="Blog"><svg class="icon"');
   });
 
   it("marks nothing on the not-found page", async () => {
     expect(await render(SiteNav, { current: null })).not.toContain("aria-current");
+  });
+
+  it("nav icons carry one-word hover titles", async () => {
+    const html = await render(SiteNav, { current: "/" });
+    expect(html).toContain('title="Home"');
+    expect(html).toContain('title="Blog"');
   });
 });
 

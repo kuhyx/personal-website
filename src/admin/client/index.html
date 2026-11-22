@@ -299,7 +299,7 @@
             <label for="password" class="glyph-label"><svg class="icon" aria-hidden="true"><use href="#icon-key"/></svg></label>
             <input id="password" name="password" type="password" autocomplete="current-password" required aria-label="Password" />
           </div>
-          <button class="primary btn-icon" type="submit" aria-label="Sign in"><svg class="icon" aria-hidden="true"><use href="#icon-signin"/></svg></button>
+          <button class="primary btn-icon" type="submit" aria-label="Sign in" title="Sign-in"><svg class="icon" aria-hidden="true"><use href="#icon-signin"/></svg></button>
         </form>
       </section>
 
@@ -308,8 +308,8 @@
           <aside class="sidebar">
             <h1 aria-label="Posts"><svg class="icon" aria-hidden="true"><use href="#icon-posts"/></svg></h1>
             <ul class="posts" id="post-list"></ul>
-            <button id="new-post" class="btn-icon" type="button" aria-label="New post"><svg class="icon" aria-hidden="true"><use href="#icon-new"/></svg></button>
-            <button id="logout" class="btn-icon" type="button" aria-label="Sign out"><svg class="icon" aria-hidden="true"><use href="#icon-signout"/></svg></button>
+            <button id="new-post" class="btn-icon" type="button" aria-label="New post" title="New"><svg class="icon" aria-hidden="true"><use href="#icon-new"/></svg></button>
+            <button id="logout" class="btn-icon" type="button" aria-label="Sign out" title="Sign-out"><svg class="icon" aria-hidden="true"><use href="#icon-signout"/></svg></button>
           </aside>
 
           <form class="editor" id="post-form">
@@ -346,13 +346,13 @@
               <textarea id="body" required aria-label="Markdown body"></textarea>
             </div>
             <div class="actions">
-              <button class="primary btn-icon" type="submit" id="save" aria-label="Save and publish"><svg class="icon" aria-hidden="true"><use href="#icon-save"/></svg></button>
-              <label class="checkbox btn-icon" for="draft" aria-label="Draft mode">
+              <button class="primary btn-icon" type="submit" id="save" aria-label="Save and publish" title="Publish"><svg class="icon" aria-hidden="true"><use href="#icon-save"/></svg></button>
+              <label class="checkbox btn-icon" for="draft" aria-label="Draft mode" title="Draft">
                 <input id="draft" type="checkbox" />
                 <svg class="icon" aria-hidden="true"><use href="#icon-draft"/></svg>
               </label>
               <input id="image-input" type="file" accept="image/*" hidden />
-              <button class="btn-icon" type="button" id="upload" aria-label="Add image"><svg class="icon" aria-hidden="true"><use href="#icon-upload"/></svg></button>
+              <button class="btn-icon" type="button" id="upload" aria-label="Add image" title="Image"><svg class="icon" aria-hidden="true"><use href="#icon-upload"/></svg></button>
               <button class="btn-icon danger" type="button" id="delete" aria-label="Delete post"><svg class="icon" aria-hidden="true"><use href="#icon-delete"/></svg></button>
             </div>
             <div class="images" id="images"></div>

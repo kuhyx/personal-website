@@ -19,7 +19,7 @@ const links = navLinks(Astro.props.current);
         href={link.href}
         class:list={{ active: link.current }}
         aria-current={link.current ? "page" : undefined}
-        aria-label={link.label}
+        aria-label={link.label} title={link.label}
       >
         <Icon name={link.icon} />
       </a>

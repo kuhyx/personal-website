@@ -13,13 +13,13 @@ import Markup from "./markup.astro";
 <section class="cv" aria-labelledby="cv-heading">
   <div class="cv__header">
     <h2 id="cv-heading" aria-label="CV"><Icon name="cv" /></h2>
-    <a class="cv__download" href="/cv.pdf" download aria-label="Download PDF"><Icon name="download" /></a>
+    <a class="cv__download" href="/cv.pdf" download aria-label="Download PDF" title="PDF"><Icon name="download" /></a>
   </div>
 
-  <h3 class="cv__subheading" aria-label="Experience"><Icon name="experience" /></h3>
+  <h3 class="cv__subheading" aria-label="Experience" title="Experience"><Icon name="experience" /></h3>
   {cv.experience.map((job) => <ExperienceItem job={job} />)}
 
-  <h3 class="cv__subheading" aria-label="Education"><Icon name="education" /></h3>
+  <h3 class="cv__subheading" aria-label="Education" title="Education"><Icon name="education" /></h3>
   {
     cv.education.map((school) => (
       <div class="cv__block">
@@ -35,7 +35,7 @@ import Markup from "./markup.astro";
     ))
   }
 
-  <h3 class="cv__subheading" aria-label="Skills"><Icon name="skills" /></h3>
+  <h3 class="cv__subheading" aria-label="Skills" title="Skills"><Icon name="skills" /></h3>
   <dl class="cv__skills">
     {
       cv.skills.map((skill) => (
@@ -49,7 +49,7 @@ import Markup from "./markup.astro";
     }
   </dl>
 
-  <h3 class="cv__subheading" aria-label="Volunteering"><Icon name="volunteering" /></h3>
+  <h3 class="cv__subheading" aria-label="Volunteering" title="Volunteering"><Icon name="volunteering" /></h3>
   {
     cv.volunteer.map((org) => (
       <div class="cv__block">
@@ -64,7 +64,7 @@ import Markup from "./markup.astro";
     ))
   }
 
-  <h3 class="cv__subheading" aria-label="Side projects"><Icon name="sideProjects" /></h3>
+  <h3 class="cv__subheading" aria-label="Side projects" title="Side-projects"><Icon name="sideProjects" /></h3>
   <ul class="cv__side-projects">
     {
       cv.sideProjects.map((sideProject) => (
