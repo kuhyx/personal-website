@@ -8,121 +8,27 @@
  * server, which is the only way its error paths get exercised at all.
  */
 
-/** Post metadata, exactly as the API sends and accepts it. */
-export interface PostMetaJson {
-  title: string;
-  date: string;
-  summary: string;
-  tags: string[];
-  cover: string | null;
-  draft: boolean;
-}
+export { Unauthorised, errorMessage, parseTags } from "./editor-parts";
+export type { PostMetaJson, StoredPostJson, EditorPorts, ListResponse, SaveResponse, UploadResponse } from "./editor-parts";
 
-/** One post as `/api/posts` returns it. */
-export interface StoredPostJson {
-  slug: string;
-  meta: PostMetaJson;
-  body: string;
-  images: string[];
-}
-
-/** What the editor needs from the outside world. */
-export interface EditorPorts {
-  readonly doc: Document;
-  readonly fetch: typeof globalThis.fetch;
-  /** Today as YYYY-MM-DD, for a new post's date. */
-  readonly today: () => string;
-}
-
-/** Raised when the session is gone; the caller shows the login form instead. */
-export class Unauthorised extends Error {}
-
-/**
- * What to show the author when something failed.
- *
- * A pure function rather than a ternary inside the catch, because `catch`
- * types its argument `unknown` and the non-`Error` case is only reachable from
- * engine-level oddities -- testable here, not through a stub server.
- */
-export function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
-interface ListResponse {
-  posts: StoredPostJson[];
-}
-interface SaveResponse {
-  durationMs: number;
-}
-interface UploadResponse {
-  name: string;
-  markdown: string;
-}
-
-const FIELDS = ["slug", "date", "title", "summary", "tags", "cover", "body"] as const;
-
-/** How a status reads: done, failed, or still running. */
-type Tone = "ok" | "bad" | "busy";
-
-/** The `index.html` sprite symbol each tone shows. */
-const TONE_GLYPH: Record<Tone, string> = { ok: "ok", bad: "error", busy: "busy" };
-
-const SVG_NS = "http://www.w3.org/2000/svg";
-
-/** A decorative `<svg class="icon">` drawing sprite symbol `#icon-<name>` from `index.html`. */
-function glyph(doc: Document, name: string): SVGSVGElement {
-  const svg = doc.createElementNS(SVG_NS, "svg");
-  svg.setAttribute("class", `icon icon--${name}`);
-  svg.setAttribute("aria-hidden", "true");
-  const use = doc.createElementNS(SVG_NS, "use");
-  use.setAttribute("href", `#icon-${name}`);
-  svg.append(use);
-  return svg;
-}
-
-/** A glyph a reader hears as `label`: a `role="img"` span around it. */
-function labelledGlyph(doc: Document, name: string, label: string): HTMLSpanElement {
-  const span = doc.createElement("span");
-  span.setAttribute("role", "img");
-  span.setAttribute("aria-label", label);
-  span.append(glyph(doc, name));
-  return span;
-}
-
-function required(doc: Document, id: string): HTMLElement {
-  const element = doc.getElementById(id);
-  if (element === null) {
-    throw new Error(`the editor document is missing #${id}`);
-  }
-  return element;
-}
-
-/** Split a comma-separated tag input into the array the API wants. */
-export function parseTags(raw: string): string[] {
-  return raw
-    .split(",")
-    .map((tag) => tag.trim())
-    .filter((tag) => tag !== "");
-}
-
-/**
- * The newlines to put between an inserted block and the text beside it.
- *
- * Markdown starts a new block on a blank line, so two newlines is the target
- * and whatever is already at that boundary counts towards it. Nothing beside
- * it needs nothing: padding the ends of the body would only be trimmed away
- * when the post is written out.
- */
-function separator(neighbour: string, existing: number): string {
-  return neighbour === "" ? "" : "\n".repeat(2 - existing);
-}
+import type { Tone, StoredPostJson, ListResponse, SaveResponse, UploadResponse, EditorPorts } from "./editor-parts";
+import {
+  glyph,
+  labelledGlyph,
+  required,
+  insertBlock,
+  postListItems,
+  TONE_GLYPH,
+  Unauthorised,
+  errorMessage,
+  parseTags,
+  FIELDS,
+} from "./editor-parts";
 
 /**
  * Wire up the editor and decide which view to show.
- *
  * The document is served without a session, so the first request is what
- * answers "am I logged in": `/api/posts` is behind the gate and the editor is
- * not.
+ * answers "am I logged in": `/api/posts` is behind the gate and the editor is not.
  */
 export async function mountEditor(ports: EditorPorts): Promise<void> {
   const { doc } = ports;
@@ -152,12 +58,7 @@ export async function mountEditor(ports: EditorPorts): Promise<void> {
 
   let posts: StoredPostJson[] = [];
   let current: string | null = null;
-
-  /**
-   * Report a state as a glyph per tone, the sentence spoken-only (textgate:
-   * the editor paints no words of its own). `figure` is a number worth
-   * seeing, such as the publish time, painted next to the glyph.
-   */
+  /** Report a state as a glyph per tone; the sentence is spoken-only (textgate). */
   const say = (text: string, tone: Tone = "ok", figure?: string): void => {
     const spoken = doc.createElement("span");
     spoken.className = "sr-only";
@@ -195,26 +96,8 @@ export async function mountEditor(ports: EditorPorts): Promise<void> {
     };
   }
 
-  /**
-   * Insert `text` at the caret, as a block of its own.
-   *
-   * Everything inserted here is an image, and an image glued to the end of the
-   * line before it is at best inline in someone else's paragraph and at worst
-   * -- when that line is a closing code fence -- a fence that never closes.
-   * That is not a corner case: loading a post assigns `body.value`, which
-   * leaves the caret at the end of it, so "pick a post, add an image" lands
-   * there every time unless the writer clicks into the textarea first.
-   */
   function insert(text: string): void {
-    const at = body.selectionStart;
-    const before = body.value.slice(0, at);
-    const after = body.value.slice(body.selectionEnd);
-    const lead = separator(before, before.endsWith("\n\n") ? 2 : before.endsWith("\n") ? 1 : 0);
-    const trail = separator(after, after.startsWith("\n\n") ? 2 : after.startsWith("\n") ? 1 : 0);
-    body.value = `${before}${lead}${text}${trail}${after}`;
-    // After the whole block, so the next thing typed starts a new paragraph
-    // rather than running on from the image.
-    body.selectionStart = body.selectionEnd = at + lead.length + text.length + trail.length;
+    insertBlock(body, text);
   }
 
   function renderImages(images: readonly string[]): void {
@@ -233,23 +116,7 @@ export async function mountEditor(ports: EditorPorts): Promise<void> {
 
   function renderList(): void {
     postList.replaceChildren(
-      ...posts.map((post) => {
-        const item = doc.createElement("li");
-        const button = doc.createElement("button");
-        button.type = "button";
-        button.setAttribute("aria-current", String(post.slug === current));
-        const label = doc.createElement("span");
-        label.textContent = post.meta.title;
-        if (post.meta.draft) {
-          label.append(" ", labelledGlyph(doc, "draft", "draft"));
-        }
-        const when = doc.createElement("small");
-        when.textContent = post.meta.date;
-        button.append(label, when);
-        button.addEventListener("click", guard(() => load(post.slug)));
-        item.append(button);
-        return item;
-      }),
+      ...postListItems(doc, posts, current, (name) => guard(() => load(name))),
     );
   }
 
@@ -262,8 +129,7 @@ export async function mountEditor(ports: EditorPorts): Promise<void> {
     summary.value = post === null ? "" : post.meta.summary;
     tags.value = post === null ? "" : post.meta.tags.join(", ");
     cover.value = post === null ? "" : (post.meta.cover ?? "");
-    // A new post starts as a draft: publishing should be a decision, not what
-    // happens because the first save was a typo.
+    // A new post starts as a draft; publishing should be a decision, not a typo.
     draft.checked = post === null ? true : post.meta.draft;
     body.value = post === null ? "" : post.body;
     remove.hidden = post === null;
@@ -376,8 +242,7 @@ export async function mountEditor(ports: EditorPorts): Promise<void> {
 
   remove.addEventListener(
     "click",
-    // No confirm(): a modal blocks the page, and every post is in git anyway --
-    // recovering one is a checkout, not a catastrophe.
+    // No confirm(): a modal blocks the page; every post is in git anyway.
     guard(async () => {
       const name = slug.value.trim();
       await api(`/api/posts/${encodeURIComponent(name)}`, { method: "DELETE" });
