@@ -151,7 +151,7 @@ Posts written here are ordinary files: commit them like any other change.
   `validate.ts`, `deps.ts`, `responses.ts`; `store.ts`, `guards.ts`, `auth.ts`,
   `rate-limit.ts`, `builder.ts`, and the runtime edges `index.ts` /
   `node-fs.ts` / `process.ts` / `config.ts`
-- `src/admin/client/` — the editor page: `index.html` plus `editor*.ts`. It is
+- `src/admin/client/` — the editor page: `index.html`, `editor.css`, `editor*.ts`. It is
   offline first: saves, deletes and picked images land on the device
   (`offline-store.ts`, `files.ts`) and sync when the service answers;
   `sw.ts` / `sw-shell.ts` keep the page itself, so `/admin` opens with the
