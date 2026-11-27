@@ -111,4 +111,20 @@ describe("flush", () => {
     expect(slugs).toEqual(["a", "b"]);
     expect(store.pending()[0]).toMatchObject({ kind: "put", body: "A2" });
   });
+
+  it("sends the rest past a rejected op, keeps only that one, then re-throws", async () => {
+    const store = makeStore();
+    store.queuePut("a", sampleMeta, "A");
+    store.queuePut("b", sampleMeta, "B");
+    const sent: string[] = [];
+    await expect(store.flush((op) => {
+      if (op.slug === "a") {
+        return Promise.reject(new Error("image not found next to the post"));
+      }
+      sent.push(op.slug);
+      return Promise.resolve();
+    })).rejects.toThrow("image not found");
+    expect(sent).toEqual(["b"]);
+    expect(store.pending().map((op) => op.slug)).toEqual(["a"]);
+  });
 });

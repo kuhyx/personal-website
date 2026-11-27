@@ -174,13 +174,16 @@ export class OfflineStore {
    * Send queued ops oldest first with `send`. Each op that resolves is removed
    * from the queue (and a sent delete is also dropped from the cache).
    * If `send` rejects with Offline: stop, keep that op and the rest, return
-   * the number sent so far. Any other rejection is re-thrown after removing
-   * nothing more (the op that failed stays queued).
+   * the number sent so far. Any other rejection (the server refused that one
+   * op) keeps it queued but goes on with the rest -- one bad save must not
+   * hold every later one hostage -- and the first such error is re-thrown at
+   * the end.
    * An op queued while `send` was awaiting is preserved if its stored copy
    * differs from the one just sent (e.g. a newer save for the same slug).
    */
   async flush(send: (op: PendingOp) => Promise<void>): Promise<number> {
     const original = this.pending();
+    const refused: unknown[] = [];
     let sent = 0;
 
     for (const op of original) {
@@ -188,9 +191,10 @@ export class OfflineStore {
         await send(op);
       } catch (e) {
         if (e instanceof Offline) {
-          return sent;
+          break;
         }
-        throw e;
+        refused.push(e);
+        continue;
       }
 
       if (op.kind === "delete") {
@@ -211,6 +215,9 @@ export class OfflineStore {
       sent++;
     }
 
+    if (refused.length > 0) {
+      throw refused[0];
+    }
     return sent;
   }
 }
