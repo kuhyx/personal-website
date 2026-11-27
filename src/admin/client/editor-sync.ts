@@ -8,6 +8,7 @@
  */
 
 import { opRequest, Unauthorised, type SaveResponse, type Tone } from "./editor-parts";
+import type { FileStore } from "./files";
 import { Offline, type OfflineStore, type PendingOp } from "./offline-store";
 
 /** A JSON request to the admin API. */
@@ -51,17 +52,52 @@ export function apiClient(fetcher: typeof globalThis.fetch, onUnauthorised: () =
  * caller's guard reports). Everything sent means the server holds it all, so
  * the list is fetched again and the build time of the last save is shown.
  */
+/**
+ * Upload one queued image, then free its bytes on this device.
+ *
+ * Bytes that are gone while the op is still queued are an error worth
+ * showing. Gone because the op was replaced or dropped mid-flush (a re-pick,
+ * a delete) is not: there is nothing left to send.
+ */
+async function sendImage(
+  store: OfflineStore,
+  files: FileStore,
+  api: Api,
+  op: PendingOp & { kind: "image" },
+): Promise<void> {
+  const blob = await files.get(op.file);
+  if (blob === null) {
+    if (store.isPending(op)) {
+      throw new Error(`${op.name} is no longer on this device`);
+    }
+    return;
+  }
+  await api(`/api/posts/${encodeURIComponent(op.slug)}/images`, {
+    method: "POST",
+    headers: { "X-Filename": op.name },
+    body: blob,
+  });
+  await files.delete(op.file);
+}
+
 export function syncer(
   store: OfflineStore,
+  files: FileStore,
   api: Api,
   say: Say,
   refresh: () => Promise<void>,
 ): () => Promise<void> {
+  // Whether this tab last told the author their work is waiting to publish.
+  const waiting = { shown: false };
   const once = async (): Promise<void> => {
     // An object, not a `let`: the send callback assigns it, which a narrowed
     // `let` would hide from the checks below.
     const last: { ms: number | null } = { ms: null };
     const send = async (op: PendingOp): Promise<void> => {
+      if (op.kind === "image") {
+        await sendImage(store, files, api, op);
+        return;
+      }
       const result = await api<SaveResponse>(...opRequest(op));
       if (op.kind === "put") {
         last.ms = result.durationMs;
@@ -70,11 +106,15 @@ export function syncer(
     const sent = await store.flush(send);
     if (store.pending().length > 0) {
       say("Saved on this device. It publishes when the server is reachable.", "offline");
+      waiting.shown = true;
       return;
     }
-    if (sent === 0) {
+    // Nothing sent and nothing shown as waiting: an idle tick. Nothing sent
+    // but "waiting" on screen: another tab shared this queue and sent it.
+    if (sent === 0 && !waiting.shown) {
       return;
     }
+    waiting.shown = false;
     await refresh();
     if (last.ms === null) {
       say("Published.");

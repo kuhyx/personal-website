@@ -2,11 +2,17 @@
  * Shared editor utilities extracted from editor.ts for reuse and testing.
  */
 
+import type { FileStore } from "./files";
 import type { KeyValue, PendingOp, StoredPostJson } from "./offline-store";
 
 export type { PostMetaJson, StoredPostJson } from "./offline-store";
 export type { KeyValue } from "./offline-store";
 export type { PendingOp } from "./offline-store";
+
+/** The one call the editor makes on `navigator.serviceWorker`. */
+export interface WorkerRegistry {
+  register: (url: string, options: RegistrationOptions) => Promise<unknown>;
+}
 
 /** What the editor needs from the outside world. */
 export interface EditorPorts {
@@ -18,6 +24,12 @@ export interface EditorPorts {
   readonly storage?: KeyValue;
   /** Register a listener fired whenever the server may be reachable again (reconnect, a timer). */
   readonly onOnline?: (listener: () => void) => void;
+  /** Where picked images wait for upload; falls back to in-memory. */
+  readonly files?: FileStore;
+  /** A fresh unique id, naming a picked image's bytes; defaults to `crypto.randomUUID`. */
+  readonly newId?: () => string;
+  /** The browser's service worker registry, absent where the origin is not secure. */
+  readonly serviceWorker?: WorkerRegistry;
 }
 
 /** In-memory KeyValue backed by a Map; used when no real storage is provided. */
@@ -140,8 +152,8 @@ export function insertBlock(body: HTMLTextAreaElement, text: string): void {
   body.selectionStart = body.selectionEnd = at + lead.length + text.length + trail.length;
 }
 
-/** The request a pending op translates to. */
-export function opRequest(op: PendingOp): [string, RequestInit] {
+/** The request a queued save or delete translates to (an image needs its bytes: `editor-sync`). */
+export function opRequest(op: PendingOp & { kind: "put" | "delete" }): [string, RequestInit] {
   if (op.kind === "put") {
     return [
       `/api/posts/${encodeURIComponent(op.slug)}`,

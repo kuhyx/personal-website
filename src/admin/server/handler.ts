@@ -9,8 +9,6 @@
  */
 
 import { captured } from "../../lib/captured";
-import { imageKey, markdownImageSources } from "../../lib/markdown-images";
-import type { PostMeta } from "../../lib/frontmatter";
 import {
   SESSION_COOKIE,
   createSession,
@@ -19,152 +17,26 @@ import {
   verifyPassword,
   verifySession,
 } from "./auth";
-import type { Builder } from "./builder";
-import { assetContentType, imageContentType, imageUploadProblem, isValidAssetName } from "./guards";
-import type { LoginThrottle } from "./rate-limit";
+import type { AdminRequest, HandlerDeps } from "./deps";
+import { imageContentType, imageUploadProblem } from "./guards";
+import { fail, json, type AdminResponse } from "./responses";
+import { shellRoute } from "./shell-routes";
+import { isRecord, missingImages, readJson, reason, readMeta } from "./validate";
 import {
   deletePost,
+  listImages,
   listSlugs,
   readAllPosts,
   readImage,
   readPost,
   writeImage,
   writePost,
-  type FileSystemPort,
 } from "./store";
 
-/** A request, reduced to what the routes actually read. */
-export interface AdminRequest {
-  readonly method: string;
-  /** Pathname only, no query string. */
-  readonly path: string;
-  readonly headers: Readonly<Record<string, string | undefined>>;
-  readonly body: Uint8Array;
-}
+export { missingImages, readMeta, reason } from "./validate";
 
-/** A response, ready for the socket layer to write. */
-export interface AdminResponse {
-  readonly status: number;
-  readonly headers: Readonly<Record<string, string>>;
-  readonly body: string | Uint8Array;
-}
-
-/** Everything the routes depend on, injected. */
-export interface HandlerDeps {
-  readonly fs: FileSystemPort;
-  readonly root: string;
-  readonly passwordHash: string;
-  readonly sessionSecret: string;
-  readonly throttle: LoginThrottle;
-  readonly builder: Builder;
-  readonly now: () => number;
-  /**
-   * The admin UI document.
-   *
-   * Served without a session, because it has to be: the login form is inside
-   * it. It carries no post data -- every byte the editor shows arrives later
-   * through `/api/*`, behind the gate.
-   */
-  readonly adminHtml: () => Promise<string>;
-  /**
-   * One built asset of the editor page, or null if there is no such file.
-   *
-   * Served beside the document and under the same reasoning: it is the shell,
-   * not the content. Without it the page loads and does nothing, because the
-   * bundle it imports is a 404.
-   */
-  readonly adminAsset: (name: string) => Promise<Uint8Array | null>;
-}
-
-const JSON_TYPE = "application/json";
-
-function json(status: number, value: unknown, extra: Record<string, string> = {}): AdminResponse {
-  return {
-    status,
-    headers: { "Content-Type": JSON_TYPE, "Cache-Control": "no-store", ...extra },
-    body: JSON.stringify(value),
-  };
-}
-
-function fail(status: number, message: string, extra: Record<string, string> = {}): AdminResponse {
-  return json(status, { error: message }, extra);
-}
-
-/** Read a JSON body, or null if it is absent or malformed. */
-function readJson(request: AdminRequest): unknown {
-  try {
-    return JSON.parse(new TextDecoder().decode(request.body));
-  } catch {
-    return null;
-  }
-}
-
-/**
- * The message to report for a thrown value.
- *
- * A named function rather than a ternary at each `catch`, so the
- * not-an-`Error` case is testable directly: a rejection carrying a non-Error
- * is real but awkward to stage through a route.
- */
-export function reason(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-/** Coerce an untrusted JSON object into PostMeta, or explain why it cannot be. */
-export function readMeta(value: unknown): PostMeta | string {
-  if (!isRecord(value)) {
-    return "body must be a JSON object";
-  }
-  const { title, date, summary, tags, cover, draft } = value;
-  if (typeof title !== "string" || title.trim() === "") {
-    return "title is required";
-  }
-  if (typeof date !== "string") {
-    return "date is required";
-  }
-  if (typeof summary !== "string" || summary.trim() === "") {
-    return "summary is required";
-  }
-  if (tags !== undefined && !(Array.isArray(tags) && tags.every((t) => typeof t === "string"))) {
-    return "tags must be an array of strings";
-  }
-  if (cover !== undefined && cover !== null && typeof cover !== "string") {
-    return "cover must be a string or null";
-  }
-  if (draft !== undefined && typeof draft !== "boolean") {
-    return "draft must be a boolean";
-  }
-  return {
-    title: title.trim(),
-    date,
-    summary: summary.trim(),
-    tags: tags ?? [],
-    cover: cover ?? null,
-    draft: draft ?? false,
-  };
-}
-
-/**
- * Which referenced images are missing from `available`.
- *
- * Run before the write, so a post naming an image that is not there is
- * rejected while `dist/` is still whole — the same guarantee `posts.test.ts`
- * enforces for the committed corpus.
- */
-export function missingImages(
-  body: string,
-  cover: string | null,
-  available: readonly string[],
-): string[] {
-  const present = new Set(available);
-  return markdownImageSources(body, cover).filter(
-    (source) => !present.has(imageKey(source)),
-  );
-}
+export type { AdminRequest, HandlerDeps } from "./deps";
+export type { AdminResponse } from "./responses";
 
 function authorised(request: AdminRequest, deps: HandlerDeps): boolean {
   const cookie = parseCookies(request.headers.cookie).get(SESSION_COOKIE);
@@ -209,8 +81,7 @@ async function savePost(
     return fail(400, "body must be a string");
   }
 
-  const existing = await readPost(deps.fs, deps.root, slug);
-  const missing = missingImages(body, meta.cover, existing?.images ?? []);
+  const missing = missingImages(body, meta.cover, await listImages(deps.fs, deps.root, slug));
   if (missing.length > 0) {
     return fail(400, `image not found next to the post: ${missing.join(", ")}`);
   }
@@ -271,40 +142,9 @@ async function route(request: AdminRequest, deps: HandlerDeps): Promise<AdminRes
     return method === "POST" ? login(request, deps) : fail(405, "method not allowed");
   }
 
-  const assetMatch = /^\/admin\/assets\/([^/]+)$/.exec(path);
-  if (assetMatch) {
-    if (method !== "GET") {
-      return fail(405, "method not allowed");
-    }
-    const name = captured(assetMatch, 1);
-    const bytes = isValidAssetName(name) ? await deps.adminAsset(name) : null;
-    return bytes === null
-      ? fail(404, "no such asset")
-      : {
-          status: 200,
-          headers: {
-            "Content-Type": assetContentType(name),
-            // Content-hashed by the build, so this is safe to keep.
-            "Cache-Control": "public, max-age=31536000, immutable",
-          },
-          body: bytes,
-        };
-  }
-
-  if (path === "/admin" || path.startsWith("/admin/")) {
-    return method === "GET"
-      ? {
-          status: 200,
-          headers: {
-            "Content-Type": "text/html; charset=utf-8",
-            "Cache-Control": "no-store",
-            // The editor must never be framed or indexed.
-            "X-Frame-Options": "DENY",
-            "X-Robots-Tag": "noindex, nofollow",
-          },
-          body: await deps.adminHtml(),
-        }
-      : fail(405, "method not allowed");
+  const shell = await shellRoute(request, deps);
+  if (shell !== null) {
+    return shell;
   }
 
   if (!authorised(request, deps)) {

@@ -11,12 +11,15 @@
 export { Unauthorised, errorMessage, parseTags } from "./editor-parts";
 export type { PostMetaJson, StoredPostJson, EditorPorts, ListResponse, SaveResponse, UploadResponse } from "./editor-parts";
 
-import type { StoredPostJson, ListResponse, UploadResponse, EditorPorts } from "./editor-parts";
+import type { StoredPostJson, ListResponse, EditorPorts } from "./editor-parts";
+import { controls } from "./editor-controls";
 import {
-  required, insertBlock, postListItems, statusReporter, renderImageList,
+  insertBlock, postListItems, statusReporter, renderImageList,
   errorMessage, parseTags, FIELDS, memoryStorage,
 } from "./editor-parts";
 import { apiClient, syncer } from "./editor-sync";
+import { queueUpload, registerShell } from "./editor-upload";
+import { memoryFiles } from "./files";
 import { Offline, OfflineStore } from "./offline-store";
 
 /**
@@ -26,37 +29,19 @@ import { Offline, OfflineStore } from "./offline-store";
  */
 export async function mountEditor(ports: EditorPorts): Promise<void> {
   const { doc } = ports;
-  const el = (id: string): HTMLElement => required(doc, id);
-  // The document is ours and shipped beside this file, so a cast is a
-  // statement about a known template, not a guess about untrusted input --
-  // and `required` has already refused an id that is not in it.
-  const input = (id: string): HTMLInputElement => el(id) as HTMLInputElement;
-
-  const status = el("status");
-  const loginView = el("login-view");
-  const editorView = el("editor-view");
-  const password = input("password");
-  const slug = input("slug");
-  const date = input("date");
-  const title = input("title");
-  const summary = input("summary");
-  const tags = input("tags");
-  const cover = input("cover");
-  const draft = input("draft");
-  const body = el("body") as HTMLTextAreaElement;
-  const save = el("save") as HTMLButtonElement;
-  const remove = el("delete") as HTMLButtonElement;
-  const imageInput = input("image-input");
-  const postList = el("post-list");
-  const imageList = el("images");
+  const {
+    el, status, loginView, editorView, password, slug, date, title, summary, tags, cover,
+    draft, body, save, remove, imageInput, postList, imageList,
+  } = controls(doc);
 
   let posts: StoredPostJson[] = [];
   let current: string | null = null;
   let dirty = false;
   const store = new OfflineStore(ports.storage ?? memoryStorage());
+  const files = ports.files ?? memoryFiles();
   const say = statusReporter(doc, status);
   const api = apiClient(ports.fetch, () => { show("login"); });
-  const sync = syncer(store, api, say, refresh);
+  const sync = syncer(store, files, api, say, refresh);
 
   function show(view: "login" | "editor"): void {
     loginView.hidden = view !== "login";
@@ -192,6 +177,7 @@ export async function mountEditor(ports: EditorPorts): Promise<void> {
         }, body.value);
         current = name;
         slug.disabled = true;
+        remove.hidden = false;
         dirty = false;
         posts = store.posts();
         renderList();
@@ -219,13 +205,13 @@ export async function mountEditor(ports: EditorPorts): Promise<void> {
         return;
       }
       const name = slug.value.trim();
-      const result = await api<UploadResponse>(
-        `/api/posts/${encodeURIComponent(name)}/images`,
-        { method: "POST", headers: { "X-Filename": file.name }, body: file },
-      );
-      insert(result.markdown);
-      renderImages((await api<StoredPostJson>(`/api/posts/${encodeURIComponent(name)}`)).images);
-      say(`Uploaded ${result.name}. Save to publish it.`);
+      // Offline first, like a save: on this device before any request goes out.
+      await queueUpload(store, files, name, file, ports.newId ?? (() => crypto.randomUUID()));
+      insert(`![](./${file.name})`);
+      dirty = true;
+      renderImages(store.post(name)?.images ?? [file.name]);
+      say(`Added ${file.name}. Save to publish it.`);
+      await sync();
     }),
   );
 
@@ -234,7 +220,7 @@ export async function mountEditor(ports: EditorPorts): Promise<void> {
     // No confirm(): a modal blocks the page; every post is in git anyway.
     guard(async () => {
       const name = slug.value.trim();
-      store.queueDelete(name);
+      await Promise.all(store.queueDelete(name).map((key) => files.delete(key)));
       posts = store.posts();
       fill(null);
       say(`Deleted ${name}.`);
@@ -243,6 +229,7 @@ export async function mountEditor(ports: EditorPorts): Promise<void> {
   );
 
   ports.onOnline?.(guard(sync));
+  guard(() => registerShell(ports.serviceWorker))();
 
   for (const id of FIELDS) {
     el(id).addEventListener("input", () => {

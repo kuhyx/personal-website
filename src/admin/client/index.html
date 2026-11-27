@@ -371,6 +371,7 @@
       // Markup and styles here, behaviour in editor.ts -- so the behaviour is
       // type-checked, linted and tested rather than living as script text.
       import { mountEditor } from "./editor.ts";
+      import { cacheFiles } from "./files.ts";
 
       await mountEditor({
         doc: document,
@@ -378,6 +379,10 @@
         today: () => new Date().toISOString().slice(0, 10),
         // Offline first: posts and unsent saves live on this device too.
         storage: window.localStorage,
+        // Picked images wait here until they upload; too big for localStorage.
+        files: cacheFiles(window.caches),
+        // Keeps the page itself, so /admin opens with the server down.
+        serviceWorker: navigator.serviceWorker,
         // Retry on reconnect, and every 30 s for a server that came back with
         // no network change; an empty queue sends no request.
         onOnline: (listener) => {

@@ -1,25 +1,13 @@
-/** The slice of Web Storage the store needs; tests pass an in-memory Map-backed stub. */
-export type KeyValue = Pick<Storage, "getItem" | "setItem" | "removeItem">;
+import type { KeyValue, PendingOp, PostMetaJson, StoredPostJson } from "./offline-types";
+export type { KeyValue, PendingOp, PostMetaJson, StoredPostJson } from "./offline-types";
 
-export interface PostMetaJson {
-  title: string;
-  date: string;
-  summary: string;
-  tags: string[];
-  cover: string | null;
-  draft: boolean;
+/** `post` with `name` listed among its images, once. */
+function withImage(post: StoredPostJson, name: string): StoredPostJson {
+  return post.images.includes(name) ? post : { ...post, images: [...post.images, name] };
 }
 
-export interface StoredPostJson {
-  slug: string;
-  meta: PostMetaJson;
-  body: string;
-  images: string[];
-}
-
-export type PendingOp =
-  | { kind: "put"; slug: string; meta: PostMetaJson; body: string }
-  | { kind: "delete"; slug: string };
+/** True for the post's own save or delete, as opposed to an image queued beside it. */
+const isPostOp = (op: PendingOp, slug: string): boolean => op.slug === slug && op.kind !== "image";
 
 /** Raised by a sender when the server cannot be reached (fetch threw). */
 export class Offline extends Error {}
@@ -82,16 +70,13 @@ export class OfflineStore {
     }
 
     for (const op of pending) {
+      const existing = merged.get(op.slug);
       if (op.kind === "put") {
-        const existing = merged.get(op.slug);
-        merged.set(op.slug, {
-          slug: op.slug,
-          meta: op.meta,
-          body: op.body,
-          images: existing?.images ?? [],
-        });
-      } else {
+        merged.set(op.slug, { slug: op.slug, meta: op.meta, body: op.body, images: existing?.images ?? [] });
+      } else if (op.kind === "delete") {
         merged.delete(op.slug);
+      } else if (existing !== undefined) {
+        merged.set(op.slug, withImage(existing, op.name));
       }
     }
 
@@ -114,18 +99,18 @@ export class OfflineStore {
    * One post's cached details with any pending put applied; null when unknown or pending delete.
    */
   post(slug: string): StoredPostJson | null {
-    const cached = this.read<StoredPostJson | null>(this.postKey(slug), null, "object");
-    const pending = this.pending();
-
-    for (const op of pending) {
+    let post = this.read<StoredPostJson | null>(this.postKey(slug), null, "object");
+    for (const op of this.pending()) {
       if (op.slug !== slug) continue;
-      if (op.kind === "delete") return null;
-      // op.kind is "put" here due to union type narrowing
-      const base = cached ?? { slug, meta: op.meta, body: op.body, images: [] };
-      return { ...base, meta: op.meta, body: op.body };
+      if (op.kind === "delete") {
+        post = null;
+      } else if (op.kind === "put") {
+        post = { slug, images: [], ...post, meta: op.meta, body: op.body };
+      } else if (post !== null) {
+        post = withImage(post, op.name);
+      }
     }
-
-    return cached;
+    return post;
   }
 
   /**
@@ -145,22 +130,51 @@ export class OfflineStore {
   }
 
   /**
-   * Queue a save. Replaces an earlier queued op for the same slug.
+   * Queue a save. Replaces an earlier queued save or delete for the same slug.
    * A put for a slug with no cached post gets images: [].
    */
   queuePut(slug: string, meta: PostMetaJson, body: string): void {
-    const pending = this.pending().filter((op) => op.slug !== slug);
+    // Images queued for the post stay ahead of the save: it may reference them,
+    // and the server refuses a post naming an image it does not have yet.
+    const pending = this.pending().filter((op) => !isPostOp(op, slug));
     pending.push({ kind: "put", slug, meta, body });
     this.write(this.pendingKey(), pending);
   }
 
   /**
-   * Queue a delete. Replaces an earlier queued op for the same slug.
+   * Queue a delete. Replaces an earlier queued save or delete for the slug and
+   * drops its queued images; returns those images' file keys, now unused.
    */
-  queueDelete(slug: string): void {
-    const pending = this.pending().filter((op) => op.slug !== slug);
+  queueDelete(slug: string): string[] {
+    const all = this.pending();
+    const files = all.flatMap((op) => (op.slug === slug && op.kind === "image" ? [op.file] : []));
+    const pending = all.filter((op) => op.slug !== slug);
     pending.push({ kind: "delete", slug });
     this.write(this.pendingKey(), pending);
+    return files;
+  }
+
+  /**
+   * Queue an image upload whose bytes sit in the FileStore under `file`.
+   * A re-pick of the same name replaces the earlier one in place -- keeping
+   * it ahead of any save that references it -- and returns the stale file key.
+   */
+  queueImage(slug: string, name: string, file: string): string | null {
+    const pending = this.pending();
+    const op: PendingOp = { kind: "image", slug, name, file };
+    const at = pending.findIndex((o) => o.kind === "image" && o.slug === slug && o.name === name);
+    const stale = at >= 0 ? pending.splice(at, 1, op)[0] : undefined;
+    if (stale === undefined) {
+      pending.push(op);
+    }
+    this.write(this.pendingKey(), pending);
+    return stale?.kind === "image" ? stale.file : null;
+  }
+
+  /** True while exactly `op` is still queued: not sent, not replaced. */
+  isPending(op: PendingOp): boolean {
+    const key = JSON.stringify(op);
+    return this.pending().some((o) => JSON.stringify(o) === key);
   }
 
   /**
@@ -207,8 +221,8 @@ export class OfflineStore {
 
       // Remove the sent op only if the stored version is still identical.
       const updated = this.pending();
-      const idx = updated.findIndex((o) => o.slug === op.slug);
-      if (idx >= 0 && JSON.stringify(updated[idx]) === JSON.stringify(op)) {
+      const idx = updated.findIndex((o) => JSON.stringify(o) === JSON.stringify(op));
+      if (idx >= 0) {
         updated.splice(idx, 1);
         this.write(this.pendingKey(), updated);
       }

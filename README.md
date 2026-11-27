@@ -147,10 +147,15 @@ Posts written here are ordinary files: commit them like any other change.
   `post-body`, `post-meta`, `not-found`
 - `src/content/blog/` — the posts
 - `src/admin/server/` — the editor service: `handler.ts` (every route, as
-  one pure function), `store.ts`, `guards.ts`, `auth.ts`, `rate-limit.ts`,
-  `builder.ts`, and the runtime edges `index.ts` / `node-fs.ts` /
-  `process.ts` / `config.ts`
-- `src/admin/client/index.html` — the editor page, one dependency-free file
+  one pure function) with `shell-routes.ts` (page, assets, service worker),
+  `validate.ts`, `deps.ts`, `responses.ts`; `store.ts`, `guards.ts`, `auth.ts`,
+  `rate-limit.ts`, `builder.ts`, and the runtime edges `index.ts` /
+  `node-fs.ts` / `process.ts` / `config.ts`
+- `src/admin/client/` — the editor page: `index.html` plus `editor*.ts`. It is
+  offline first: saves, deletes and picked images land on the device
+  (`offline-store.ts`, `files.ts`) and sync when the service answers;
+  `sw.ts` / `sw-shell.ts` keep the page itself, so `/admin` opens with the
+  service down
 - `src/data/` — `cv.json` (content) + `cv.ts` (typed view)
 - `public/cv.pdf` — the rendered CV, offered as a download
 

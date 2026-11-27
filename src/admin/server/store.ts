@@ -94,10 +94,23 @@ export async function readPost(
     return null;
   }
   const { meta, body } = parsePost(`${slug}/${POST_FILE}`, await fs.readText(file));
-  const images = (await fs.listDir(directory)).filter(
+  return { slug, meta, body, images: await listImages(fs, root, slug) };
+}
+
+/**
+ * The image filenames beside a post, post file or not.
+ *
+ * Not only through `readPost`: an offline editor uploads a new post's image
+ * before the post's first save, and that save must see it.
+ */
+export async function listImages(fs: FileSystemPort, root: string, slug: string): Promise<string[]> {
+  const directory = postDir(root, slug);
+  if (!(await fs.exists(directory))) {
+    return [];
+  }
+  return (await fs.listDir(directory)).filter(
     (name) => name !== POST_FILE && extensionOf(name) !== "",
   );
-  return { slug, meta, body, images };
 }
 
 /** Read every post, newest first. */
