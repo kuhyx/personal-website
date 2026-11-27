@@ -368,7 +368,7 @@ describe("saving", () => {
     expect(status()).toBe("request failed (502)");
   });
 
-  it("reports a network failure rather than leaving the button disabled", async () => {
+  it("keeps a save on the device when the network fails, and re-enables the button", async () => {
     const { fetch } = stubFetch([listing([])]);
     const offline: typeof globalThis.fetch = (path, init) =>
       init?.method === "PUT"
@@ -378,7 +378,8 @@ describe("saving", () => {
     input("slug").value = "x";
     el("post-form").dispatchEvent(new Event("submit"));
     await settle();
-    expect(status()).toBe("Failed to fetch");
+    expect(status()).toBe("Saved on this device. It publishes when the server is reachable.");
+    expect(el("status").dataset.tone).toBe("offline");
     expect((el("save") as HTMLButtonElement).disabled).toBe(false);
   });
 });
@@ -459,7 +460,7 @@ describe("deleting", () => {
     await settle();
     expect(calls).toContain("DELETE /api/posts/hello");
     expect(input("slug").value).toBe("");
-    expect(status()).toBe("Deleted hello.");
+    expect(status()).toBe("Published.");
   });
 
   it("reports a failed delete", async () => {

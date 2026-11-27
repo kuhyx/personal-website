@@ -176,12 +176,14 @@ export class OfflineStore {
    * If `send` rejects with Offline: stop, keep that op and the rest, return
    * the number sent so far. Any other rejection is re-thrown after removing
    * nothing more (the op that failed stays queued).
+   * An op queued while `send` was awaiting is preserved if its stored copy
+   * differs from the one just sent (e.g. a newer save for the same slug).
    */
   async flush(send: (op: PendingOp) => Promise<void>): Promise<number> {
-    const pending = this.pending();
+    const original = this.pending();
     let sent = 0;
 
-    for (const op of pending) {
+    for (const op of original) {
       try {
         await send(op);
       } catch (e) {
@@ -199,9 +201,14 @@ export class OfflineStore {
         this.write(this.listKey(), list);
       }
 
+      // Remove the sent op only if the stored version is still identical.
+      const updated = this.pending();
+      const idx = updated.findIndex((o) => o.slug === op.slug);
+      if (idx >= 0 && JSON.stringify(updated[idx]) === JSON.stringify(op)) {
+        updated.splice(idx, 1);
+        this.write(this.pendingKey(), updated);
+      }
       sent++;
-      const remaining = pending.slice(sent);
-      this.write(this.pendingKey(), remaining);
     }
 
     return sent;

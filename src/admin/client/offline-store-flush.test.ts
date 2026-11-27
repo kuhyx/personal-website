@@ -95,4 +95,20 @@ describe("flush", () => {
     });
     expect(result).toBe(0);
   });
+
+  it("keeps ops queued during send pending when a newer save replaced the sent one", async () => {
+    const store = makeStore();
+    store.queuePut("a", sampleMeta, "A");
+    const result = await store.flush((op) => {
+      if (op.slug === "a") {
+        store.queuePut("a", { ...sampleMeta, title: "Newer" }, "A2");
+        store.queuePut("b", sampleMeta, "B");
+      }
+      return Promise.resolve();
+    });
+    expect(result).toBe(1);
+    const slugs = store.pending().map((o) => o.slug);
+    expect(slugs).toEqual(["a", "b"]);
+    expect(store.pending()[0]).toMatchObject({ kind: "put", body: "A2" });
+  });
 });

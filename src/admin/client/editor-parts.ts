@@ -2,9 +2,11 @@
  * Shared editor utilities extracted from editor.ts for reuse and testing.
  */
 
-import type { StoredPostJson } from "./offline-store";
+import type { KeyValue, PendingOp, StoredPostJson } from "./offline-store";
 
 export type { PostMetaJson, StoredPostJson } from "./offline-store";
+export type { KeyValue } from "./offline-store";
+export type { PendingOp } from "./offline-store";
 
 /** What the editor needs from the outside world. */
 export interface EditorPorts {
@@ -12,6 +14,20 @@ export interface EditorPorts {
   readonly fetch: typeof globalThis.fetch;
   /** Today as YYYY-MM-DD, for a new post's date. */
   readonly today: () => string;
+  /** Persistent key-value storage; falls back to in-memory. */
+  readonly storage?: KeyValue;
+  /** Register a listener fired whenever the server may be reachable again (reconnect, a timer). */
+  readonly onOnline?: (listener: () => void) => void;
+}
+
+/** In-memory KeyValue backed by a Map; used when no real storage is provided. */
+export function memoryStorage(): KeyValue {
+  const data = new Map<string, string>();
+  return {
+    getItem: (k: string) => data.get(k) ?? null,
+    setItem: (k: string, v: string) => { data.set(k, v); },
+    removeItem: (k: string) => { data.delete(k); },
+  };
 }
 
 export interface ListResponse {
@@ -41,11 +57,16 @@ export function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-/** How a status reads: done, failed, or still running. */
-export type Tone = "ok" | "bad" | "busy";
+/** How a status reads: done, failed, still running, or offline. */
+export type Tone = "ok" | "bad" | "busy" | "offline";
 
 /** The `index.html` sprite symbol each tone shows. */
-export const TONE_GLYPH: Record<Tone, string> = { ok: "ok", bad: "error", busy: "busy" };
+export const TONE_GLYPH: Record<Tone, string> = {
+  ok: "ok",
+  bad: "error",
+  busy: "busy",
+  offline: "offline",
+};
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -119,6 +140,21 @@ export function insertBlock(body: HTMLTextAreaElement, text: string): void {
   body.selectionStart = body.selectionEnd = at + lead.length + text.length + trail.length;
 }
 
+/** The request a pending op translates to. */
+export function opRequest(op: PendingOp): [string, RequestInit] {
+  if (op.kind === "put") {
+    return [
+      `/api/posts/${encodeURIComponent(op.slug)}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ meta: op.meta, body: op.body }),
+      },
+    ];
+  }
+  return [`/api/posts/${encodeURIComponent(op.slug)}`, { method: "DELETE" }];
+}
+
 /**
  * Create list item elements for the post list.
  *
@@ -151,4 +187,46 @@ export function postListItems(
     item.append(button);
     return item;
   });
+}
+
+/**
+ * The status reporter: a glyph per tone, the sentence spoken-only (textgate:
+ * the editor paints no words of its own). `figure` is a number worth seeing,
+ * such as the publish time, painted next to the glyph.
+ */
+export function statusReporter(
+  doc: Document,
+  status: HTMLElement,
+): (text: string, tone?: Tone, figure?: string) => void {
+  return (text, tone = "ok", figure) => {
+    const spoken = doc.createElement("span");
+    spoken.className = "sr-only";
+    spoken.textContent = text;
+    const shown: Node[] = [glyph(doc, TONE_GLYPH[tone])];
+    if (figure !== undefined) {
+      shown.push(doc.createTextNode(figure));
+    }
+    status.replaceChildren(...shown, spoken);
+    status.dataset.tone = tone;
+  };
+}
+
+/** Fill the image list; clicking a name inserts its reference through `onPick`. */
+export function renderImageList(
+  doc: Document,
+  list: HTMLElement,
+  images: readonly string[],
+  onPick: (name: string) => void,
+): void {
+  if (images.length === 0) {
+    list.replaceChildren(labelledGlyph(doc, "images", "No images yet."));
+    return;
+  }
+  list.replaceChildren();
+  for (const name of images) {
+    const code = doc.createElement("code");
+    code.textContent = name;
+    code.addEventListener("click", () => { onPick(name); });
+    list.append(code, " ");
+  }
 }

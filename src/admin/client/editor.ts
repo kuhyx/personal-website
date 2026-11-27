@@ -11,19 +11,13 @@
 export { Unauthorised, errorMessage, parseTags } from "./editor-parts";
 export type { PostMetaJson, StoredPostJson, EditorPorts, ListResponse, SaveResponse, UploadResponse } from "./editor-parts";
 
-import type { Tone, StoredPostJson, ListResponse, SaveResponse, UploadResponse, EditorPorts } from "./editor-parts";
+import type { StoredPostJson, ListResponse, UploadResponse, EditorPorts } from "./editor-parts";
 import {
-  glyph,
-  labelledGlyph,
-  required,
-  insertBlock,
-  postListItems,
-  TONE_GLYPH,
-  Unauthorised,
-  errorMessage,
-  parseTags,
-  FIELDS,
+  required, insertBlock, postListItems, statusReporter, renderImageList,
+  errorMessage, parseTags, FIELDS, memoryStorage,
 } from "./editor-parts";
+import { apiClient, syncer } from "./editor-sync";
+import { Offline, OfflineStore } from "./offline-store";
 
 /**
  * Wire up the editor and decide which view to show.
@@ -58,35 +52,15 @@ export async function mountEditor(ports: EditorPorts): Promise<void> {
 
   let posts: StoredPostJson[] = [];
   let current: string | null = null;
-  /** Report a state as a glyph per tone; the sentence is spoken-only (textgate). */
-  const say = (text: string, tone: Tone = "ok", figure?: string): void => {
-    const spoken = doc.createElement("span");
-    spoken.className = "sr-only";
-    spoken.textContent = text;
-    const shown: Node[] = [glyph(doc, TONE_GLYPH[tone])];
-    if (figure !== undefined) {
-      shown.push(doc.createTextNode(figure));
-    }
-    status.replaceChildren(...shown, spoken);
-    status.dataset.tone = tone;
-  };
+  let dirty = false;
+  const store = new OfflineStore(ports.storage ?? memoryStorage());
+  const say = statusReporter(doc, status);
+  const api = apiClient(ports.fetch, () => { show("login"); });
+  const sync = syncer(store, api, say, refresh);
 
   function show(view: "login" | "editor"): void {
     loginView.hidden = view !== "login";
     editorView.hidden = view !== "editor";
-  }
-
-  async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
-    const response = await ports.fetch(path, { credentials: "same-origin", ...options });
-    if (response.status === 401) {
-      show("login");
-      throw new Unauthorised("your session has expired");
-    }
-    const payload = ((await response.json()) as unknown) as Partial<{ error: string }> & T;
-    if (!response.ok) {
-      throw new Error(payload.error ?? `request failed (${String(response.status)})`);
-    }
-    return payload;
   }
 
   /** Run a handler, turning any failure into a message instead of a crash. */
@@ -101,17 +75,7 @@ export async function mountEditor(ports: EditorPorts): Promise<void> {
   }
 
   function renderImages(images: readonly string[]): void {
-    if (images.length === 0) {
-      imageList.replaceChildren(labelledGlyph(doc, "images", "No images yet."));
-      return;
-    }
-    imageList.replaceChildren();
-    for (const name of images) {
-      const code = doc.createElement("code");
-      code.textContent = name;
-      code.addEventListener("click", () => { insert(`![](./${name})`); });
-      imageList.append(code, " ");
-    }
+    renderImageList(doc, imageList, images, (name) => { insert(`![](./${name})`); });
   }
 
   function renderList(): void {
@@ -137,20 +101,50 @@ export async function mountEditor(ports: EditorPorts): Promise<void> {
     renderList();
   }
 
+  /** Paint the cached list at once, then replace it with the server's when it answers. */
   async function refresh(): Promise<void> {
-    posts = (await api<ListResponse>("/api/posts")).posts;
+    posts = store.posts();
+    renderList();
+    try {
+      store.rememberList((await api<ListResponse>("/api/posts")).posts);
+    } catch (error) {
+      if (error instanceof Offline) {
+        return;
+      }
+      throw error;
+    }
+    posts = store.posts();
     renderList();
   }
 
+  /** Show the cached copy at once; the fresh one replaces it only if nothing was typed meanwhile. */
   async function load(name: string): Promise<void> {
-    fill(await api<StoredPostJson>(`/api/posts/${encodeURIComponent(name)}`));
-    say(`Editing ${name}.`);
+    const cached = store.post(name);
+    if (cached !== null) {
+      fill(cached);
+      say(`Editing ${name}.`);
+    }
+    let fresh: StoredPostJson;
+    try {
+      fresh = await api<StoredPostJson>(`/api/posts/${encodeURIComponent(name)}`);
+    } catch (error) {
+      if (cached !== null && error instanceof Offline) {
+        return;
+      }
+      throw error;
+    }
+    store.rememberPost(fresh);
+    if (cached === null || (current === name && !dirty)) {
+      fill(store.post(name));
+      say(`Editing ${name}.`);
+    }
   }
 
   async function start(): Promise<void> {
     await refresh();
     show("editor");
     fill(null);
+    guard(sync)();
   }
 
   el("login-form").addEventListener("submit", (event) => {
@@ -186,28 +180,23 @@ export async function mountEditor(ports: EditorPorts): Promise<void> {
     guard(async () => {
       const name = slug.value.trim();
       save.disabled = true;
-      say("Saving and rebuilding…", "busy");
       try {
-        const result = await api<SaveResponse>(`/api/posts/${encodeURIComponent(name)}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            meta: {
-              title: title.value,
-              date: date.value,
-              summary: summary.value,
-              tags: parseTags(tags.value),
-              cover: cover.value.trim() === "" ? null : cover.value.trim(),
-              draft: draft.checked,
-            },
-            body: body.value,
-          }),
-        });
+        // Offline first: the save lands on this device before any request goes out.
+        store.queuePut(name, {
+          title: title.value,
+          date: date.value,
+          summary: summary.value,
+          tags: parseTags(tags.value),
+          cover: cover.value.trim() === "" ? null : cover.value.trim(),
+          draft: draft.checked,
+        }, body.value);
         current = name;
         slug.disabled = true;
-        await refresh();
-        const seconds = `${(result.durationMs / 1000).toFixed(1)}s`;
-        say(`Saved and published in ${seconds}.`, "ok", seconds);
+        dirty = false;
+        posts = store.posts();
+        renderList();
+        say("Saving and rebuilding…", "busy");
+        await sync();
       } finally {
         save.disabled = false;
       }
@@ -245,15 +234,21 @@ export async function mountEditor(ports: EditorPorts): Promise<void> {
     // No confirm(): a modal blocks the page; every post is in git anyway.
     guard(async () => {
       const name = slug.value.trim();
-      await api(`/api/posts/${encodeURIComponent(name)}`, { method: "DELETE" });
-      await refresh();
+      store.queueDelete(name);
+      posts = store.posts();
       fill(null);
       say(`Deleted ${name}.`);
+      await sync();
     }),
   );
 
+  ports.onOnline?.(guard(sync));
+
   for (const id of FIELDS) {
-    el(id).addEventListener("input", () => { status.textContent = ""; });
+    el(id).addEventListener("input", () => {
+      status.textContent = "";
+      dirty = true;
+    });
   }
 
   try {
