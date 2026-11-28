@@ -33,7 +33,7 @@
     "@types/hast": "3.0.5",
     "@types/node": "26.6.11",
     "@vitest/coverage-v8": "5.1.2",
-    "eslint": "10.15.0",
+    "eslint": "10.16.0",
     "eslint-plugin-astro": "3.2.2",
     "jsdom": "31.0.1",
     "sharp": "0.35.5",
