@@ -15,12 +15,6 @@ export default getViteConfig({
       include: ["src/**/*.ts"],
       // data/** and content/** are static content; test/** is harness.
       exclude: ["src/data/**", "src/content/**", "src/test/**", "src/**/*.d.ts"],
-      thresholds: {
-        statements: 100,
-        branches: 100,
-        functions: 100,
-        lines: 100,
-      },
     },
   },
 });

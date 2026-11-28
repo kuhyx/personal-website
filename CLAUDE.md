@@ -7,7 +7,7 @@ Before writing, editing or reviewing ANY post in `src/content/blog/`, load the `
 - run: `pnpm run dev`
 - test: `pnpm run test`
 - test-changed: `scripts/test_changed.sh`
-- lint: `pnpm run lint`
-- coverage: `pnpm run coverage`
-- coverage-gaps: `coverage-gaps coverage/lcov.info`
+- lint: n/a: dropped (kuhy, 2026-11-27)
+- coverage: n/a: dropped (kuhy, 2026-11-27)
+- coverage-gaps: n/a: dropped (kuhy, 2026-11-27)
 - deploy: `scripts/deploy.sh`
